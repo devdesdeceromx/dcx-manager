@@ -1,4 +1,4 @@
-import { BarChart3, Bell, ChevronDown, FileText, LayoutDashboard, LogOut, Menu, Settings, UserRoundSearch, Users, X } from 'lucide-react'
+import { BarChart3, Bell, CalendarDays, ChevronDown, FileText, LayoutDashboard, LogOut, Menu, Settings, UserRoundSearch, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
@@ -8,6 +8,7 @@ const items = [
   { label: 'Resumen', icon: LayoutDashboard, to: '/dashboard' },
   { label: 'Prospectos', icon: UserRoundSearch, to: '/prospects' },
   { label: 'Proyectos', icon: BarChart3, to: '/projects' },
+  { label: 'Calendario', icon: CalendarDays, to: '/calendar' },
   { label: 'Clientes', icon: Users, to: '/clients' },
   { label: 'Cotizaciones', icon: FileText, to: '/quotes' },
 ]

@@ -13,6 +13,8 @@ export type DashboardData = {
   activeClients: number
   pendingQuotes: number
   activeProjects: number
+  overdueTasks: number
+  dueSoonTasks: number
   totalProspects: number
   pipeline: Record<ProspectStatus, number>
   activity: DashboardActivity[]
@@ -25,16 +27,20 @@ export async function getDashboardData(): Promise<DashboardData> {
   monthStart.setDate(1)
   monthStart.setHours(0, 0, 0, 0)
 
-  const [newProspectsResult, activeClientsResult, pendingQuotesResult, activeProjectsResult, prospectsResult, activityResult] = await Promise.all([
+  const dateKey = (date:Date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+  const today = new Date(), nextWeek = new Date(today); nextWeek.setDate(today.getDate()+7)
+  const [newProspectsResult, activeClientsResult, pendingQuotesResult, activeProjectsResult, overdueTasksResult, dueSoonTasksResult, prospectsResult, activityResult] = await Promise.all([
     supabase.from('prospects').select('*', { count: 'exact', head: true }).gte('created_at', monthStart.toISOString()),
     supabase.from('clients').select('*', { count: 'exact', head: true }).eq('status', 'active'),
     supabase.from('quotes').select('*', { count: 'exact', head: true }).in('status', ['draft', 'sent', 'viewed', 'negotiation']),
     supabase.from('projects').select('*', { count: 'exact', head: true }).in('status', ['preparation', 'waiting_deposit', 'ready_to_start', 'development', 'review', 'adjustments', 'ready_delivery', 'delivered', 'warranty', 'paused']),
+    supabase.from('project_tasks').select('*', { count: 'exact', head: true }).lt('due_date', dateKey(today)).neq('status','completed'),
+    supabase.from('project_tasks').select('*', { count: 'exact', head: true }).gte('due_date', dateKey(today)).lte('due_date', dateKey(nextWeek)).neq('status','completed'),
     supabase.from('prospects').select('status'),
     supabase.from('activity_logs').select('id, action, entity_type, created_at').order('created_at', { ascending: false }).limit(6).returns<DashboardActivity[]>(),
   ])
 
-  const error = newProspectsResult.error ?? activeClientsResult.error ?? pendingQuotesResult.error ?? activeProjectsResult.error ?? prospectsResult.error ?? activityResult.error
+  const error = newProspectsResult.error ?? activeClientsResult.error ?? pendingQuotesResult.error ?? activeProjectsResult.error ?? overdueTasksResult.error ?? dueSoonTasksResult.error ?? prospectsResult.error ?? activityResult.error
   if (error) throw error
 
   const pipeline = { ...emptyPipeline }
@@ -45,6 +51,8 @@ export async function getDashboardData(): Promise<DashboardData> {
     activeClients: activeClientsResult.count ?? 0,
     pendingQuotes: pendingQuotesResult.count ?? 0,
     activeProjects: activeProjectsResult.count ?? 0,
+    overdueTasks: overdueTasksResult.count ?? 0,
+    dueSoonTasks: dueSoonTasksResult.count ?? 0,
     totalProspects: prospectsResult.data?.length ?? 0,
     pipeline,
     activity: activityResult.data ?? [],

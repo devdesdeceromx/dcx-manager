@@ -13,5 +13,6 @@ export async function createQuote(input: QuoteInput, items: QuoteItemInput[]) {
 }
 
 export async function updateQuoteStatus(id: string, status: QuoteStatus) {
+  if (status === 'accepted') return supabase.rpc('accept_quote_and_create_project', { quote_uuid: id })
   return supabase.from('quotes').update({ status }).eq('id', id)
 }

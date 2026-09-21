@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
 import { getDashboardData, type DashboardActivity, type DashboardData } from './dashboardService'
 
-const initialData: DashboardData = { newProspects: 0, activeClients: 0, pendingQuotes: 0, totalProspects: 0, pipeline: { new: 0, contacted: 0, qualified: 0, quote: 0, negotiation: 0, won: 0, lost: 0 }, activity: [] }
+const initialData: DashboardData = { newProspects: 0, activeClients: 0, pendingQuotes: 0, activeProjects: 0, totalProspects: 0, pipeline: { new: 0, contacted: 0, qualified: 0, quote: 0, negotiation: 0, won: 0, lost: 0 }, activity: [] }
 const pipelineLabels: Array<[keyof DashboardData['pipeline'], string]> = [['new','Nuevo'], ['contacted','Contactado'], ['qualified','Calificado'], ['quote','Cotización'], ['negotiation','Negociación'], ['won','Ganado'], ['lost','No ganado']]
 
 export function DashboardPage() {
@@ -21,7 +21,7 @@ export function DashboardPage() {
     { label: 'Prospectos este mes', value: data.newProspects, detail: 'Registros del mes actual', icon: UserRoundSearch, ready: true },
     { label: 'Clientes activos', value: data.activeClients, detail: 'Expedientes activos', icon: Users2, ready: true },
     { label: 'Cotizaciones pendientes', value: data.pendingQuotes, detail: 'Borradores y seguimientos', icon: FileText, ready: true },
-    { label: 'Proyectos activos', value: '—', detail: 'Pendiente de habilitar', icon: Clock3, ready: false },
+    { label: 'Proyectos activos', value: data.activeProjects, detail: 'En operación y seguimiento', icon: Clock3, ready: true },
   ]
 
   return <>

@@ -9,7 +9,7 @@ pnpm install
 pnpm dev
 ```
 
-La autenticación actual es únicamente una vista previa local. No valida ni persiste credenciales. Las variables de Supabase están documentadas en `.env.example` y permanecen vacías hasta configurar el proyecto real.
+La autenticación usa Supabase y mantiene la sesión del usuario. Las variables necesarias están documentadas en `.env.example`; los valores locales permanecen fuera de Git mediante `.env.local`.
 
 ## Estructura
 

@@ -7,6 +7,7 @@ import { ProjectsPage } from '@/features/projects/ProjectsPage'
 import { ProspectsPage } from '@/features/prospects/ProspectsPage'
 import { QuotesPage } from '@/features/quotes/QuotesPage'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
+import { FinancesPage } from '@/features/finances/FinancesPage'
 import { AppLayout } from '@/shared/components/AppLayout'
 
 export function App() {
@@ -21,6 +22,7 @@ export function App() {
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/quotes" element={<QuotesPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/finances" element={<FinancesPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

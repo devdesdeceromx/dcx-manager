@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
 import { getDashboardData, type DashboardActivity, type DashboardData } from './dashboardService'
 
-const initialData: DashboardData = { newProspects: 0, activeClients: 0, pendingQuotes: 0, activeProjects: 0, overdueTasks: 0, dueSoonTasks: 0, totalProspects: 0, pipeline: { new: 0, contacted: 0, qualified: 0, quote: 0, negotiation: 0, won: 0, lost: 0 }, activity: [] }
+const initialData: DashboardData = { newProspects: 0, activeClients: 0, pendingQuotes: 0, activeProjects: 0, overdueTasks: 0, dueSoonTasks: 0, collectedRevenue: 0, projectExpenses: 0, totalProspects: 0, pipeline: { new: 0, contacted: 0, qualified: 0, quote: 0, negotiation: 0, won: 0, lost: 0 }, activity: [] }
 const pipelineLabels: Array<[keyof DashboardData['pipeline'], string]> = [['new','Nuevo'], ['contacted','Contactado'], ['qualified','Calificado'], ['quote','Cotización'], ['negotiation','Negociación'], ['won','Ganado'], ['lost','No ganado']]
 
 export function DashboardPage() {
@@ -14,6 +14,7 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const name = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'equipo'
   const today = new Intl.DateTimeFormat('es-MX', { dateStyle: 'full' }).format(new Date())
+  const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
 
   useEffect(() => { void getDashboardData().then(setData).catch((requestError: Error) => setError(requestError.message)).finally(() => setLoading(false)) }, [])
 
@@ -29,6 +30,7 @@ export function DashboardPage() {
     {error && <p className="auth-error dashboard-error">No pudimos cargar el resumen: {error}</p>}
     <section className="metrics-grid" aria-label="Métricas principales">{metrics.map(({ label, value, detail, icon: Icon, ready }) => <article className="metric-card" key={label}><div className="metric-top"><span>{label}</span><div className="metric-icon"><Icon size={19}/></div></div><strong>{loading && ready ? '…' : value}</strong><div className={`metric-change ${ready ? 'up' : 'neutral'}`}><span>{detail}</span></div></article>)}</section>
     {!loading && (data.overdueTasks > 0 || data.dueSoonTasks > 0) && <Link className={`deadline-alert ${data.overdueTasks ? 'has-overdue' : ''}`} to="/calendar"><CalendarDays size={20}/><div><strong>{data.overdueTasks ? `${data.overdueTasks} tareas atrasadas` : 'Próximos vencimientos'}</strong><span>{data.dueSoonTasks} tareas vencen durante los próximos 7 días</span></div><ArrowRight size={18}/></Link>}
+    <Link className="dashboard-finance" to="/finances"><div><span>Cobrado</span><strong>{loading?'…':money.format(data.collectedRevenue)}</strong></div><div><span>Gastos de proyectos</span><strong>{loading?'…':money.format(data.projectExpenses)}</strong></div><div><span>Utilidad actual</span><strong>{loading?'…':money.format(data.collectedRevenue-data.projectExpenses)}</strong></div><ArrowRight size={18}/></Link>
     <section className="dashboard-grid">
       <article className="panel pipeline-panel"><div className="panel-header"><div><h2>Pipeline comercial</h2><p>{data.totalProspects} oportunidades registradas</p></div><Link className="link-button" to="/prospects">Administrar <ArrowRight size={16}/></Link></div><div className="pipeline-chart">{pipelineLabels.map(([key,label]) => { const count = data.pipeline[key]; const width = data.totalProspects ? Math.max((count / data.totalProspects) * 100, count ? 6 : 0) : 0; return <div className="pipeline-line" key={key}><div><span>{label}</span><strong>{count}</strong></div><div className="pipeline-bar"><i style={{width:`${width}%`}}/></div></div> })}</div></article>
       <article className="panel activity-panel"><div className="panel-header"><div><h2>Actividad reciente</h2><p>Movimientos registrados por el sistema</p></div></div>{data.activity.length ? <div className="activity-list">{data.activity.map((activity) => <Activity key={activity.id} activity={activity}/>)}</div> : <div className="empty-compact"><Clock3 size={22}/><strong>Todo tranquilo por aquí</strong><span>Las altas, ediciones y conversiones aparecerán en este espacio.</span></div>}</article>

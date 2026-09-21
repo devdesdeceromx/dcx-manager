@@ -6,15 +6,25 @@ import { useAuth } from './AuthContext'
 
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
-  const { isAuthenticated, enterPreview } = useAuth()
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { isAuthenticated, isLoading, signIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
-  if (isAuthenticated) return <Navigate to="/dashboard" replace />
+  if (!isLoading && isAuthenticated) return <Navigate to="/dashboard" replace />
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    enterPreview()
+    setError(null)
+    setIsSubmitting(true)
+    const form = new FormData(event.currentTarget)
+    const authError = await signIn(String(form.get('email')), String(form.get('password')))
+    setIsSubmitting(false)
+    if (authError) {
+      setError('No pudimos iniciar sesión. Revisa tu correo y contraseña.')
+      return
+    }
     const destination = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname
     navigate(destination ?? '/dashboard', { replace: true })
   }
@@ -46,9 +56,10 @@ export function LoginPage() {
               <input id="password" name="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" autoComplete="current-password" minLength={6} required />
               <button type="button" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
             </div>
-            <button className="primary-button" type="submit">Entrar a vista previa <ArrowRight size={18} /></button>
+            {error && <p className="auth-error" role="alert">{error}</p>}
+            <button className="primary-button" type="submit" disabled={isSubmitting}>{isSubmitting ? 'Ingresando…' : 'Iniciar sesión'} {!isSubmitting && <ArrowRight size={18} />}</button>
           </form>
-          <div className="preview-note"><span>Vista previa local</span><p>Los datos del formulario no se validan, almacenan ni envían. La autenticación real se conectará con Supabase.</p></div>
+          <div className="preview-note"><span>Acceso seguro</span><p>Tu sesión se valida mediante Supabase y permanece protegida en este dispositivo.</p></div>
         </div>
       </section>
     </main>

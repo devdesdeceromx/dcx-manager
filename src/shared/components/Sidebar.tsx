@@ -26,7 +26,7 @@ export function Sidebar() {
           <button className="nav-item" type="button"><Settings size={19} /><span>Configuración</span></button>
         </nav>
         <div className="sidebar-user"><div className="avatar">SC</div><div><strong>Santiago</strong><span>Administrador</span></div><ChevronDown size={16} /></div>
-        <button className="logout-button" onClick={signOut}><LogOut size={17} /> Cerrar sesión</button>
+        <button className="logout-button" onClick={() => void signOut()}><LogOut size={17} /> Cerrar sesión</button>
       </aside>
     </>
   )

@@ -1,22 +1,49 @@
-import { createContext, useContext, useMemo, useState, type PropsWithChildren } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type PropsWithChildren } from 'react'
+import type { User } from '@supabase/supabase-js'
+import { supabase } from '@/shared/lib/supabase'
 
 type AuthContextValue = {
   isAuthenticated: boolean
-  enterPreview: () => void
-  signOut: () => void
+  isLoading: boolean
+  user: User | null
+  signIn: (email: string, password: string) => Promise<string | null>
+  signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null)
+      setIsLoading(false)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setIsLoading(false)
+    })
+
+    return () => listener.subscription.unsubscribe()
+  }, [])
+
   const value = useMemo(
     () => ({
-      isAuthenticated,
-      enterPreview: () => setIsAuthenticated(true),
-      signOut: () => setIsAuthenticated(false),
+      isAuthenticated: Boolean(user),
+      isLoading,
+      user,
+      signIn: async (email: string, password: string) => {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        return error?.message ?? null
+      },
+      signOut: async () => {
+        await supabase.auth.signOut()
+      },
     }),
-    [isAuthenticated],
+    [isLoading, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

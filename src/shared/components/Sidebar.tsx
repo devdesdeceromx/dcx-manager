@@ -1,4 +1,4 @@
-import { BarChart3, Bell, ChevronDown, LayoutDashboard, LogOut, Menu, Settings, Users, X } from 'lucide-react'
+import { BarChart3, Bell, ChevronDown, LayoutDashboard, LogOut, Menu, Settings, UserRoundSearch, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
@@ -6,6 +6,7 @@ import { Brand } from './Brand'
 
 const items = [
   { label: 'Resumen', icon: LayoutDashboard, to: '/dashboard' },
+  { label: 'Prospectos', icon: UserRoundSearch, to: '/prospects' },
   { label: 'Proyectos', icon: BarChart3, to: '/projects' },
   { label: 'Clientes', icon: Users, to: '/clients' },
 ]

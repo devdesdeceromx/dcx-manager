@@ -4,6 +4,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { ClientsPage } from '@/features/clients/ClientsPage'
 import { ProjectsPage } from '@/features/projects/ProjectsPage'
+import { ProspectsPage } from '@/features/prospects/ProspectsPage'
 import { AppLayout } from '@/shared/components/AppLayout'
 
 export function App() {
@@ -13,6 +14,7 @@ export function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/prospects" element={<ProspectsPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/clients" element={<ClientsPage />} />
         </Route>

@@ -245,6 +245,15 @@ a { color: inherit; text-decoration: none; }
 .header-actions { display: flex; align-items: center; gap: 10px; }
 .header-actions .period-button { display: inline-flex; align-items: center; gap: 7px; }
 .pdf-button { color: var(--purple); }
+.settings-layout { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); gap: 20px; align-items: start; }
+.settings-section { padding: 24px; display: grid; gap: 18px; }
+.settings-heading { display: flex; align-items: flex-start; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--line); color: var(--purple); }
+.settings-heading h2 { color: var(--ink); font-size: 1rem; margin: 0 0 4px; }
+.settings-heading p { color: var(--muted); font-size: .76rem; margin: 0; }
+.settings-section > label { display: grid; gap: 7px; font-size: .76rem; font-weight: 600; }
+.settings-section input, .settings-section textarea, .settings-section select { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 11px 12px; background: #fff; color: var(--ink); font: inherit; font-weight: 400; }
+.settings-success { color: #23855c; background: #edf9f4; border-radius: 8px; padding: 10px 12px; font-size: .78rem; }
+.module-loading { padding: 28px; color: var(--muted); }
 .payment-history span b, .payment-history span small { display: block; }
 .payment-history span b { color: var(--ink); font-size: .77rem; }
 .payment-history span small, .payment-history p { color: var(--muted); font-size: .7rem; margin-top: 3px; }
@@ -361,6 +370,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 @media (max-width: 760px) {
+  .settings-layout { grid-template-columns: 1fr; }
   .login-page { display: block; background: #fbfbfd; }
   .login-intro { display: none; }
   .login-panel { min-height: 100vh; padding: 30px 22px; }

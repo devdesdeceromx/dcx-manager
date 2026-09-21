@@ -1,4 +1,5 @@
 import type { jsPDF as JsPDF } from "jspdf";
+import { getBusinessSettings, type BusinessSettings } from "@/features/settings/settingsService";
 
 const money = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -51,13 +52,13 @@ type FinanceDocument = {
   totals: { contracted: number; collected: number; expenses: number };
 };
 
-function header(doc: JsPDF, title: string, subtitle: string) {
+function header(doc: JsPDF, title: string, subtitle: string, settings?: BusinessSettings | null) {
   doc.setFillColor(...purple);
   doc.rect(0, 0, 210, 34, "F");
   doc.setTextColor(255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
-  doc.text("DevDesdeCeroMX", 16, 15);
+  doc.text(settings?.business_name || "DevDesdeCeroMX", 16, 15);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text("DCX Manager", 16, 23);
@@ -77,7 +78,7 @@ function label(doc: JsPDF, text: string, value: string, x: number, y: number) {
   doc.setTextColor(30);
   doc.text(value || "—", x, y + 6);
 }
-function footer(doc: JsPDF) {
+function footer(doc: JsPDF, settings?: BusinessSettings | null) {
   const pages = doc.getNumberOfPages();
   for (let page = 1; page <= pages; page++) {
     doc.setPage(page);
@@ -85,15 +86,17 @@ function footer(doc: JsPDF) {
     doc.line(16, 282, 194, 282);
     doc.setFontSize(7);
     doc.setTextColor(125);
-    doc.text("Documento generado desde DCX Manager", 16, 288);
+    const contact = [settings?.email, settings?.phone, settings?.website].filter(Boolean).join(" · ");
+    doc.text(contact || "Documento generado desde DCX Manager", 16, 288);
     doc.text(`Página ${page} de ${pages}`, 194, 288, { align: "right" });
   }
 }
 
 export async function downloadQuotePdf(quote: QuoteDocument) {
   const { jsPDF } = await import("jspdf");
+  const { data: settings } = await getBusinessSettings();
   const doc = new jsPDF();
-  header(doc, "COTIZACIÓN", quote.folio);
+  header(doc, "COTIZACIÓN", quote.folio, settings);
   label(
     doc,
     "Cliente",
@@ -137,7 +140,7 @@ export async function downloadQuotePdf(quote: QuoteDocument) {
       height = Math.max(9, lines.length * 5);
     if (y + height > 258) {
       doc.addPage();
-      header(doc, "COTIZACIÓN", quote.folio);
+      header(doc, "COTIZACIÓN", quote.folio, settings);
       y = 47;
     }
     doc.setFontSize(8);
@@ -164,15 +167,16 @@ export async function downloadQuotePdf(quote: QuoteDocument) {
   if (quote.discount) totalLine("Descuento", -quote.discount);
   if (quote.tax) totalLine("Impuestos", quote.tax);
   totalLine("Total", quote.total, true);
-  if (quote.notes && y < 265) {
+  const documentNotes = [quote.notes, settings?.quote_terms].filter(Boolean).join("\n\n");
+  if (documentNotes && y < 265) {
     y += 4;
     doc.setFont("helvetica", "bold");
     doc.text("Notas", 16, y);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(80);
-    doc.text(doc.splitTextToSize(quote.notes, 120), 16, y + 6);
+    doc.text(doc.splitTextToSize(documentNotes, 120), 16, y + 6);
   }
-  footer(doc);
+  footer(doc, settings);
   doc.save(`cotizacion-${quote.folio}.pdf`);
 }
 
@@ -183,8 +187,9 @@ export async function downloadPaymentReceiptPdf({
   methodLabel,
 }: ReceiptDocument) {
   const { jsPDF } = await import("jspdf");
+  const { data: settings } = await getBusinessSettings();
   const doc = new jsPDF();
-  header(doc, "RECIBO DE PAGO", project.folio);
+  header(doc, "RECIBO DE PAGO", project.folio, settings);
   label(
     doc,
     "Recibimos de",
@@ -210,7 +215,8 @@ export async function downloadPaymentReceiptPdf({
   label(doc, "Método", methodLabel, 112, 145);
   label(doc, "Referencia", payment.reference || "Sin referencia", 16, 164);
   label(doc, "Folio interno", payment.id.slice(0, 8).toUpperCase(), 112, 164);
-  if (payment.notes) label(doc, "Notas", payment.notes, 16, 185);
+  const receiptNotes = [payment.notes, settings?.receipt_notes].filter(Boolean).join(" · ");
+  if (receiptNotes) label(doc, "Notas", receiptNotes, 16, 185);
   doc.setFontSize(8);
   doc.setTextColor(110);
   doc.text(
@@ -219,7 +225,7 @@ export async function downloadPaymentReceiptPdf({
     252,
     { align: "center" },
   );
-  footer(doc);
+  footer(doc, settings);
   doc.save(`recibo-${project.folio}-${payment.paid_at}.pdf`);
 }
 
@@ -228,8 +234,9 @@ export async function downloadFinanceReportPdf({
   totals,
 }: FinanceDocument) {
   const { jsPDF } = await import("jspdf");
+  const { data: settings } = await getBusinessSettings();
   const doc = new jsPDF();
-  header(doc, "REPORTE FINANCIERO", date.format(new Date()));
+  header(doc, "REPORTE FINANCIERO", date.format(new Date()), settings);
   const profit = totals.collected - totals.expenses;
   label(doc, "Contratado", money.format(totals.contracted), 16, 49);
   label(doc, "Cobrado", money.format(totals.collected), 75, 49);
@@ -251,7 +258,7 @@ export async function downloadFinanceReportPdf({
   for (const project of projects) {
     if (y > 260) {
       doc.addPage();
-      header(doc, "REPORTE FINANCIERO", "Continuación");
+      header(doc, "REPORTE FINANCIERO", "Continuación", settings);
       y = 48;
     }
     doc.setFont("helvetica", "bold");
@@ -279,6 +286,6 @@ export async function downloadFinanceReportPdf({
     doc.line(16, y, 194, y);
     y += 6;
   }
-  footer(doc);
+  footer(doc, settings);
   doc.save(`reporte-financiero-${new Date().toISOString().slice(0, 10)}.pdf`);
 }

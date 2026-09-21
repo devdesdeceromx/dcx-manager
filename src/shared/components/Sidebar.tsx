@@ -32,7 +32,7 @@ export function Sidebar() {
           {items.map(({ label, icon: Icon, to }) => <NavLink key={label} to={to} onClick={() => setOpen(false)} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}><Icon size={19} /><span>{label}</span></NavLink>)}
           <span className="nav-label nav-label-secondary">Sistema</span>
           <NotificationCenter />
-          <button className="nav-item" type="button"><Settings size={19} /><span>Configuración</span></button>
+          <NavLink to="/settings" onClick={() => setOpen(false)} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}><Settings size={19} /><span>Configuración</span></NavLink>
         </nav>
         <div className="sidebar-user"><div className="avatar">{initials}</div><div><strong>{displayName}</strong><span>{email}</span></div><ChevronDown size={16} /></div>
         <button className="logout-button" onClick={() => void signOut()}><LogOut size={17} /> Cerrar sesión</button>

@@ -15,7 +15,8 @@ export type Quote = {
   valid_until: string | null
   notes: string | null
   created_at: string
-  clients: { name: string; business_name: string | null } | null
+  clients: { name: string; business_name: string | null; email: string | null } | null
+  quote_items: Array<QuoteItemInput & { sort_order: number }>
 }
 
 export type QuoteInput = {

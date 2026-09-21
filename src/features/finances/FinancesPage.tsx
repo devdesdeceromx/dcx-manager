@@ -1,26 +1,422 @@
-import { CircleDollarSign, Plus, ReceiptText, Search, Trash2, TrendingDown, TrendingUp, X } from 'lucide-react'
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { createExpense, deleteExpense, listFinanceProjects, type ExpenseCategory, type FinanceProject } from './financeService'
+import {
+  CircleDollarSign,
+  Download,
+  Plus,
+  ReceiptText,
+  Search,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+  X,
+} from "lucide-react";
+import { downloadFinanceReportPdf } from "@/shared/lib/pdf";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  createExpense,
+  deleteExpense,
+  listFinanceProjects,
+  type ExpenseCategory,
+  type FinanceProject,
+} from "./financeService";
 
-const money=new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}), today=()=>new Date().toISOString().slice(0,10)
-const categoryLabels:Record<ExpenseCategory,string>={tools:'Herramientas',hosting:'Hosting',licenses:'Licencias',collaborators:'Colaboradores',advertising:'Publicidad',taxes:'Impuestos',other:'Otros'}
-const paid=(project:FinanceProject)=>project.project_payments.reduce((sum,item)=>sum+Number(item.amount),0), spent=(project:FinanceProject)=>project.project_expenses.reduce((sum,item)=>sum+Number(item.amount),0)
+const money = new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+  }),
+  today = () => new Date().toISOString().slice(0, 10);
+const categoryLabels: Record<ExpenseCategory, string> = {
+  tools: "Herramientas",
+  hosting: "Hosting",
+  licenses: "Licencias",
+  collaborators: "Colaboradores",
+  advertising: "Publicidad",
+  taxes: "Impuestos",
+  other: "Otros",
+};
+const paid = (project: FinanceProject) =>
+    project.project_payments.reduce(
+      (sum, item) => sum + Number(item.amount),
+      0,
+    ),
+  spent = (project: FinanceProject) =>
+    project.project_expenses.reduce(
+      (sum, item) => sum + Number(item.amount),
+      0,
+    );
 
-export function FinancesPage(){
- const [projects,setProjects]=useState<FinanceProject[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState<string|null>(null),[search,setSearch]=useState(''),[filter,setFilter]=useState('all'),[expenseProject,setExpenseProject]=useState<FinanceProject|null>(null)
- const load=async()=>{const{data,error:requestError}=await listFinanceProjects();setProjects(data??[]);setError(requestError?.message??null);setLoading(false)}
- useEffect(()=>{void listFinanceProjects().then(({data,error:requestError})=>{setProjects(data??[]);setError(requestError?.message??null);setLoading(false)})},[])
- const filtered=useMemo(()=>projects.filter((project)=>(filter==='all'||project.id===filter)&&[project.folio,project.name,project.clients?.name,project.clients?.business_name].some((value)=>value?.toLowerCase().includes(search.toLowerCase()))),[projects,search,filter])
- const totals=useMemo(()=>filtered.reduce((result,project)=>({contracted:result.contracted+Number(project.price),collected:result.collected+paid(project),expenses:result.expenses+spent(project)}),{contracted:0,collected:0,expenses:0}),[filtered]),profit=totals.collected-totals.expenses,margin=totals.collected?profit/totals.collected*100:0
- return <><header className="module-header module-header-row"><div><span className="eyebrow dark">FINANZAS</span><h1>Rentabilidad</h1><p>Ingresos, gastos y utilidad real por proyecto.</p></div>{projects.length>0&&<button className="new-button" onClick={()=>setExpenseProject(projects[0])}><Plus size={18}/> Nuevo gasto</button>}</header>{error&&<p className="auth-error dashboard-error">{error}</p>}
- <section className="finance-metrics"><article><CircleDollarSign/><span>Cobrado</span><strong>{money.format(totals.collected)}</strong></article><article><TrendingDown/><span>Gastos</span><strong>{money.format(totals.expenses)}</strong></article><article className={profit<0?'negative':''}><TrendingUp/><span>Utilidad</span><strong>{money.format(profit)}</strong><small>{margin.toFixed(1)}% de margen</small></article><article><ReceiptText/><span>Por cobrar</span><strong>{money.format(Math.max(totals.contracted-totals.collected,0))}</strong></article></section>
- <section className="panel prospects-panel"><div className="prospects-toolbar finance-toolbar"><div className="search-field"><Search size={17}/><input placeholder="Buscar proyecto o cliente" value={search} onChange={(e)=>setSearch(e.target.value)}/></div><select value={filter} onChange={(e)=>setFilter(e.target.value)}><option value="all">Todos los proyectos</option>{projects.map((project)=><option value={project.id} key={project.id}>{project.name}</option>)}</select></div>{loading?<div className="empty-table"><strong>Cargando finanzas…</strong></div>:projects.length===0?<div className="module-empty prospects-empty"><div className="module-empty-icon"><CircleDollarSign size={27}/></div><h2>Sin proyectos para analizar</h2><p>Los ingresos y gastos aparecerán cuando exista una cotización aceptada.</p></div>:<div className="finance-list">{filtered.map((project)=>{const collected=paid(project),expenses=spent(project),utility=collected-expenses;return <article className="finance-row" key={project.id}><div><small>{project.folio}</small><strong>{project.name}</strong><span>{project.clients?.business_name||project.clients?.name||'Cliente'}</span></div><div><small>Cobrado</small><strong>{money.format(collected)}</strong></div><div><small>Gastos</small><strong>{money.format(expenses)}</strong></div><div className={utility<0?'amount-negative':'amount-positive'}><small>Utilidad</small><strong>{money.format(utility)}</strong></div><button className="period-button" onClick={()=>setExpenseProject(project)}>Ver gastos</button></article>})}</div>}</section>{expenseProject&&<ExpenseModal project={expenseProject} onClose={()=>setExpenseProject(null)} onChanged={async()=>{await load();setExpenseProject(null)}}/>}</>
+export function FinancesPage() {
+  const [projects, setProjects] = useState<FinanceProject[]>([]),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState<string | null>(null),
+    [search, setSearch] = useState(""),
+    [filter, setFilter] = useState("all"),
+    [expenseProject, setExpenseProject] = useState<FinanceProject | null>(null);
+  const load = async () => {
+    const { data, error: requestError } = await listFinanceProjects();
+    setProjects(data ?? []);
+    setError(requestError?.message ?? null);
+    setLoading(false);
+  };
+  useEffect(() => {
+    void listFinanceProjects().then(({ data, error: requestError }) => {
+      setProjects(data ?? []);
+      setError(requestError?.message ?? null);
+      setLoading(false);
+    });
+  }, []);
+  const filtered = useMemo(
+    () =>
+      projects.filter(
+        (project) =>
+          (filter === "all" || project.id === filter) &&
+          [
+            project.folio,
+            project.name,
+            project.clients?.name,
+            project.clients?.business_name,
+          ].some((value) =>
+            value?.toLowerCase().includes(search.toLowerCase()),
+          ),
+      ),
+    [projects, search, filter],
+  );
+  const totals = useMemo(
+      () =>
+        filtered.reduce(
+          (result, project) => ({
+            contracted: result.contracted + Number(project.price),
+            collected: result.collected + paid(project),
+            expenses: result.expenses + spent(project),
+          }),
+          { contracted: 0, collected: 0, expenses: 0 },
+        ),
+      [filtered],
+    ),
+    profit = totals.collected - totals.expenses,
+    margin = totals.collected ? (profit / totals.collected) * 100 : 0;
+  return (
+    <>
+      <header className="module-header module-header-row">
+        <div>
+          <span className="eyebrow dark">FINANZAS</span>
+          <h1>Rentabilidad</h1>
+          <p>Ingresos, gastos y utilidad real por proyecto.</p>
+        </div>
+        {projects.length > 0 && (
+          <div className="header-actions">
+            <button
+              className="period-button"
+              onClick={() =>
+                downloadFinanceReportPdf({
+                  projects: filtered.map((project) => ({
+                    ...project,
+                    collected: paid(project),
+                    expenses: spent(project),
+                  })),
+                  totals,
+                })
+              }
+            >
+              <Download size={17} /> Descargar reporte
+            </button>
+            <button
+              className="new-button"
+              onClick={() => setExpenseProject(projects[0])}
+            >
+              <Plus size={18} /> Nuevo gasto
+            </button>
+          </div>
+        )}
+      </header>
+      {error && <p className="auth-error dashboard-error">{error}</p>}
+      <section className="finance-metrics">
+        <article>
+          <CircleDollarSign />
+          <span>Cobrado</span>
+          <strong>{money.format(totals.collected)}</strong>
+        </article>
+        <article>
+          <TrendingDown />
+          <span>Gastos</span>
+          <strong>{money.format(totals.expenses)}</strong>
+        </article>
+        <article className={profit < 0 ? "negative" : ""}>
+          <TrendingUp />
+          <span>Utilidad</span>
+          <strong>{money.format(profit)}</strong>
+          <small>{margin.toFixed(1)}% de margen</small>
+        </article>
+        <article>
+          <ReceiptText />
+          <span>Por cobrar</span>
+          <strong>
+            {money.format(Math.max(totals.contracted - totals.collected, 0))}
+          </strong>
+        </article>
+      </section>
+      <section className="panel prospects-panel">
+        <div className="prospects-toolbar finance-toolbar">
+          <div className="search-field">
+            <Search size={17} />
+            <input
+              placeholder="Buscar proyecto o cliente"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="all">Todos los proyectos</option>
+            {projects.map((project) => (
+              <option value={project.id} key={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        {loading ? (
+          <div className="empty-table">
+            <strong>Cargando finanzas…</strong>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="module-empty prospects-empty">
+            <div className="module-empty-icon">
+              <CircleDollarSign size={27} />
+            </div>
+            <h2>Sin proyectos para analizar</h2>
+            <p>
+              Los ingresos y gastos aparecerán cuando exista una cotización
+              aceptada.
+            </p>
+          </div>
+        ) : (
+          <div className="finance-list">
+            {filtered.map((project) => {
+              const collected = paid(project),
+                expenses = spent(project),
+                utility = collected - expenses;
+              return (
+                <article className="finance-row" key={project.id}>
+                  <div>
+                    <small>{project.folio}</small>
+                    <strong>{project.name}</strong>
+                    <span>
+                      {project.clients?.business_name ||
+                        project.clients?.name ||
+                        "Cliente"}
+                    </span>
+                  </div>
+                  <div>
+                    <small>Cobrado</small>
+                    <strong>{money.format(collected)}</strong>
+                  </div>
+                  <div>
+                    <small>Gastos</small>
+                    <strong>{money.format(expenses)}</strong>
+                  </div>
+                  <div
+                    className={
+                      utility < 0 ? "amount-negative" : "amount-positive"
+                    }
+                  >
+                    <small>Utilidad</small>
+                    <strong>{money.format(utility)}</strong>
+                  </div>
+                  <button
+                    className="period-button"
+                    onClick={() => setExpenseProject(project)}
+                  >
+                    Ver gastos
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+      {expenseProject && (
+        <ExpenseModal
+          project={expenseProject}
+          onClose={() => setExpenseProject(null)}
+          onChanged={async () => {
+            await load();
+            setExpenseProject(null);
+          }}
+        />
+      )}
+    </>
+  );
 }
 
-function ExpenseModal({project,onClose,onChanged}:{project:FinanceProject;onClose:()=>void;onChanged:()=>Promise<void>}){
- const [category,setCategory]=useState<ExpenseCategory>('other'),[description,setDescription]=useState(''),[amount,setAmount]=useState(''),[vendor,setVendor]=useState(''),[date,setDate]=useState(today()),[reference,setReference]=useState(''),[notes,setNotes]=useState(''),[saving,setSaving]=useState(false),[error,setError]=useState<string|null>(null)
- async function submit(e:FormEvent){e.preventDefault();setSaving(true);const{error:requestError}=await createExpense({project_id:project.id,category,description,amount:Number(amount),vendor:vendor||null,expense_date:date,reference:reference||null,notes:notes||null});if(requestError){setError(requestError.message);setSaving(false);return}await onChanged()}
- async function remove(id:string,description:string){if(!window.confirm(`¿Eliminar el gasto “${description}”?`))return;const{error:requestError}=await deleteExpense(id);if(requestError)setError(requestError.message);else await onChanged()}
- const expenses=[...project.project_expenses].sort((a,b)=>b.expense_date.localeCompare(a.expense_date))
- return <div className="modal-backdrop"><section className="prospect-modal expense-modal" role="dialog" aria-modal="true"><div className="modal-header"><div><span className="eyebrow dark">{project.folio}</span><h2>Gastos del proyecto</h2></div><button className="icon-button" onClick={onClose} aria-label="Cerrar"><X/></button></div><form className="prospect-form" onSubmit={submit}><div className="form-grid"><label>Categoría<select value={category} onChange={(e)=>setCategory(e.target.value as ExpenseCategory)}>{Object.entries(categoryLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><label>Fecha<input type="date" required value={date} onChange={(e)=>setDate(e.target.value)}/></label></div><label>Descripción<input required value={description} onChange={(e)=>setDescription(e.target.value)}/></label><div className="form-grid"><label>Monto<input type="number" min="0.01" step="0.01" required value={amount} onChange={(e)=>setAmount(e.target.value)}/></label><label>Proveedor<input value={vendor} onChange={(e)=>setVendor(e.target.value)}/></label></div><label>Referencia o comprobante<input value={reference} onChange={(e)=>setReference(e.target.value)}/></label><label>Notas<textarea rows={2} value={notes} onChange={(e)=>setNotes(e.target.value)}/></label>{error&&<p className="auth-error">{error}</p>}<div className="modal-actions"><button type="button" className="period-button" onClick={onClose}>Cancelar</button><button className="new-button" disabled={saving}>{saving?'Guardando…':'Registrar gasto'}</button></div></form><div className="expense-history"><strong>Gastos registrados</strong>{expenses.length?expenses.map((expense)=><div key={expense.id}><span><b>{expense.description}</b><small>{categoryLabels[expense.category]} · {new Intl.DateTimeFormat('es-MX',{dateStyle:'medium'}).format(new Date(`${expense.expense_date}T12:00:00`))}</small></span><strong>{money.format(expense.amount)}</strong><button className="icon-button" onClick={()=>void remove(expense.id,expense.description)} aria-label={`Eliminar ${expense.description}`}><Trash2 size={15}/></button></div>):<p>Aún no hay gastos registrados.</p>}</div></section></div>
+function ExpenseModal({
+  project,
+  onClose,
+  onChanged,
+}: {
+  project: FinanceProject;
+  onClose: () => void;
+  onChanged: () => Promise<void>;
+}) {
+  const [category, setCategory] = useState<ExpenseCategory>("other"),
+    [description, setDescription] = useState(""),
+    [amount, setAmount] = useState(""),
+    [vendor, setVendor] = useState(""),
+    [date, setDate] = useState(today()),
+    [reference, setReference] = useState(""),
+    [notes, setNotes] = useState(""),
+    [saving, setSaving] = useState(false),
+    [error, setError] = useState<string | null>(null);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const { error: requestError } = await createExpense({
+      project_id: project.id,
+      category,
+      description,
+      amount: Number(amount),
+      vendor: vendor || null,
+      expense_date: date,
+      reference: reference || null,
+      notes: notes || null,
+    });
+    if (requestError) {
+      setError(requestError.message);
+      setSaving(false);
+      return;
+    }
+    await onChanged();
+  }
+  async function remove(id: string, description: string) {
+    if (!window.confirm(`¿Eliminar el gasto “${description}”?`)) return;
+    const { error: requestError } = await deleteExpense(id);
+    if (requestError) setError(requestError.message);
+    else await onChanged();
+  }
+  const expenses = [...project.project_expenses].sort((a, b) =>
+    b.expense_date.localeCompare(a.expense_date),
+  );
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="prospect-modal expense-modal"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="modal-header">
+          <div>
+            <span className="eyebrow dark">{project.folio}</span>
+            <h2>Gastos del proyecto</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} aria-label="Cerrar">
+            <X />
+          </button>
+        </div>
+        <form className="prospect-form" onSubmit={submit}>
+          <div className="form-grid">
+            <label>
+              Categoría
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
+              >
+                {Object.entries(categoryLabels).map(([value, label]) => (
+                  <option value={value} key={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Fecha
+              <input
+                type="date"
+                required
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+              />
+            </label>
+          </div>
+          <label>
+            Descripción
+            <input
+              required
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </label>
+          <div className="form-grid">
+            <label>
+              Monto
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                required
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </label>
+            <label>
+              Proveedor
+              <input
+                value={vendor}
+                onChange={(e) => setVendor(e.target.value)}
+              />
+            </label>
+          </div>
+          <label>
+            Referencia o comprobante
+            <input
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+            />
+          </label>
+          <label>
+            Notas
+            <textarea
+              rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </label>
+          {error && <p className="auth-error">{error}</p>}
+          <div className="modal-actions">
+            <button type="button" className="period-button" onClick={onClose}>
+              Cancelar
+            </button>
+            <button className="new-button" disabled={saving}>
+              {saving ? "Guardando…" : "Registrar gasto"}
+            </button>
+          </div>
+        </form>
+        <div className="expense-history">
+          <strong>Gastos registrados</strong>
+          {expenses.length ? (
+            expenses.map((expense) => (
+              <div key={expense.id}>
+                <span>
+                  <b>{expense.description}</b>
+                  <small>
+                    {categoryLabels[expense.category]} ·{" "}
+                    {new Intl.DateTimeFormat("es-MX", {
+                      dateStyle: "medium",
+                    }).format(new Date(`${expense.expense_date}T12:00:00`))}
+                  </small>
+                </span>
+                <strong>{money.format(expense.amount)}</strong>
+                <button
+                  className="icon-button"
+                  onClick={() => void remove(expense.id, expense.description)}
+                  aria-label={`Eliminar ${expense.description}`}
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            ))
+          ) : (
+            <p>Aún no hay gastos registrados.</p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }

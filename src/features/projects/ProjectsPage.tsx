@@ -1,33 +1,702 @@
-import { CheckCircle2, ExternalLink, FolderKanban, ListTodo, Plus, Search, Trash2, WalletCards, X } from 'lucide-react'
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
-import { createProjectTask, deleteProjectTask, listActiveStaff, listProjects, registerPayment, updateProject, updateProjectTask, type PaymentKind, type PaymentMethod, type Project, type ProjectStatus, type ProjectTask, type TaskPriority, type TaskStatus } from './projectService'
+import {
+  CheckCircle2,
+  ExternalLink,
+  FolderKanban,
+  ListTodo,
+  Plus,
+  Search,
+  Trash2,
+  WalletCards,
+  Download,
+  X,
+} from "lucide-react";
+import { downloadPaymentReceiptPdf } from "@/shared/lib/pdf";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+import {
+  createProjectTask,
+  deleteProjectTask,
+  listActiveStaff,
+  listProjects,
+  registerPayment,
+  updateProject,
+  updateProjectTask,
+  type PaymentKind,
+  type PaymentMethod,
+  type Project,
+  type ProjectStatus,
+  type ProjectTask,
+  type TaskPriority,
+  type TaskStatus,
+} from "./projectService";
 
-const statuses: Array<[ProjectStatus,string]> = [['preparation','Preparación'],['waiting_deposit','Esperando anticipo'],['ready_to_start','Listo para iniciar'],['development','En desarrollo'],['review','En revisión'],['adjustments','Ajustes'],['ready_delivery','Listo para entregar'],['delivered','Entregado'],['warranty','Garantía'],['closed','Cerrado'],['paused','Pausado'],['cancelled','Cancelado']]
-const taskStatuses: Array<[TaskStatus,string]> = [['todo','Pendiente'],['in_progress','En proceso'],['review','En revisión'],['completed','Completada'],['blocked','Bloqueada']]
-const priorityLabels: Record<TaskPriority,string> = { low:'Baja', medium:'Media', high:'Alta' }
-const kindLabels: Record<PaymentKind,string> = { deposit:'Anticipo', partial:'Abono', final:'Liquidación' }
-const methodLabels: Record<PaymentMethod,string> = { transfer:'Transferencia', cash:'Efectivo', card:'Tarjeta', other:'Otro' }
-const money = new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}), today=()=>new Date().toISOString().slice(0,10)
-const paid=(project:Project)=>project.project_payments.reduce((total,payment)=>total+Number(payment.amount),0)
+const statuses: Array<[ProjectStatus, string]> = [
+  ["preparation", "Preparación"],
+  ["waiting_deposit", "Esperando anticipo"],
+  ["ready_to_start", "Listo para iniciar"],
+  ["development", "En desarrollo"],
+  ["review", "En revisión"],
+  ["adjustments", "Ajustes"],
+  ["ready_delivery", "Listo para entregar"],
+  ["delivered", "Entregado"],
+  ["warranty", "Garantía"],
+  ["closed", "Cerrado"],
+  ["paused", "Pausado"],
+  ["cancelled", "Cancelado"],
+];
+const taskStatuses: Array<[TaskStatus, string]> = [
+  ["todo", "Pendiente"],
+  ["in_progress", "En proceso"],
+  ["review", "En revisión"],
+  ["completed", "Completada"],
+  ["blocked", "Bloqueada"],
+];
+const priorityLabels: Record<TaskPriority, string> = {
+  low: "Baja",
+  medium: "Media",
+  high: "Alta",
+};
+const kindLabels: Record<PaymentKind, string> = {
+  deposit: "Anticipo",
+  partial: "Abono",
+  final: "Liquidación",
+};
+const methodLabels: Record<PaymentMethod, string> = {
+  transfer: "Transferencia",
+  cash: "Efectivo",
+  card: "Tarjeta",
+  other: "Otro",
+};
+const money = new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+  }),
+  today = () => new Date().toISOString().slice(0, 10);
+const paid = (project: Project) =>
+  project.project_payments.reduce(
+    (total, payment) => total + Number(payment.amount),
+    0,
+  );
 
-export function ProjectsPage(){
- const [projects,setProjects]=useState<Project[]>([]),[search,setSearch]=useState(''),[loading,setLoading]=useState(true),[saving,setSaving]=useState<string|null>(null),[error,setError]=useState<string|null>(null),[paymentProject,setPaymentProject]=useState<Project|null>(null),[taskProject,setTaskProject]=useState<Project|null>(null)
- const load=async()=>{const {data,error:requestError}=await listProjects();setProjects(data??[]);setError(requestError?.message??null);setLoading(false)}
- useEffect(()=>{void listProjects().then(({data,error:requestError})=>{setProjects(data??[]);setError(requestError?.message??null);setLoading(false)})},[])
- const filtered=useMemo(()=>projects.filter((project)=>[project.folio,project.name,project.clients?.name,project.clients?.business_name].some((value)=>value?.toLowerCase().includes(search.toLowerCase()))),[projects,search])
- async function save(id:string,updates:{status?:ProjectStatus}){const previous=projects;setProjects((current)=>current.map((project)=>project.id===id?{...project,...updates}:project));setSaving(id);setError(null);const {error:requestError}=await updateProject(id,updates);if(requestError){setProjects(previous);setError(requestError.message)}setSaving(null)}
- return <><header className="module-header"><span className="eyebrow dark">OPERACIÓN</span><h1>Proyectos</h1><p>Da seguimiento al trabajo contratado, desde el anticipo hasta la entrega.</p></header><section className="panel prospects-panel"><div className="prospects-toolbar"><div className="search-field"><Search size={17}/><input placeholder="Buscar proyecto, cliente o folio" value={search} onChange={(e)=>setSearch(e.target.value)}/></div><span>{filtered.length} proyectos</span></div>{error&&<p className="auth-error panel-error">{error}</p>}{loading?<div className="empty-table"><strong>Cargando proyectos…</strong></div>:projects.length===0?<div className="module-empty prospects-empty"><div className="module-empty-icon"><FolderKanban size={27}/></div><h2>Todavía no hay proyectos</h2><p>Cuando una cotización sea aceptada, su proyecto aparecerá aquí automáticamente.</p><Link className="new-button" to="/quotes">Ir a cotizaciones</Link></div>:<div className="prospect-list">{filtered.map((project)=>{const totalPaid=paid(project),balance=Math.max(Number(project.price)-totalPaid,0);return <article className="project-list-row" key={project.id}><button className="project-main" onClick={()=>setTaskProject(project)}><small>{project.folio}</small><strong>{project.name}</strong><span>{project.clients?.business_name||project.clients?.name||'Cliente'} · {project.project_tasks.length} tareas</span></button><button className="payment-summary" onClick={()=>setPaymentProject(project)}><small>Pagado · {money.format(totalPaid)}</small><strong>{money.format(balance)} pendiente</strong></button><div className="project-progress"><small>Avance · {project.progress}%</small><div className="progress"><i style={{width:`${project.progress}%`}}/></div></div><select className="status project-status" value={project.status} disabled={saving===project.id} onChange={(e)=>void save(project.id,{status:e.target.value as ProjectStatus})}>{statuses.map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></article>})}</div>}</section>{paymentProject&&<PaymentModal project={paymentProject} onClose={()=>setPaymentProject(null)} onSaved={async()=>{setPaymentProject(null);await load()}}/>}{taskProject&&<TasksModal project={taskProject} onClose={()=>setTaskProject(null)} onChanged={async()=>{await load();const {data}=await listProjects();setTaskProject(data?.find((item)=>item.id===taskProject.id)??null)}}/>}</>
+export function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]),
+    [search, setSearch] = useState(""),
+    [loading, setLoading] = useState(true),
+    [saving, setSaving] = useState<string | null>(null),
+    [error, setError] = useState<string | null>(null),
+    [paymentProject, setPaymentProject] = useState<Project | null>(null),
+    [taskProject, setTaskProject] = useState<Project | null>(null);
+  const load = async () => {
+    const { data, error: requestError } = await listProjects();
+    setProjects(data ?? []);
+    setError(requestError?.message ?? null);
+    setLoading(false);
+  };
+  useEffect(() => {
+    void listProjects().then(({ data, error: requestError }) => {
+      setProjects(data ?? []);
+      setError(requestError?.message ?? null);
+      setLoading(false);
+    });
+  }, []);
+  const filtered = useMemo(
+    () =>
+      projects.filter((project) =>
+        [
+          project.folio,
+          project.name,
+          project.clients?.name,
+          project.clients?.business_name,
+        ].some((value) => value?.toLowerCase().includes(search.toLowerCase())),
+      ),
+    [projects, search],
+  );
+  async function save(id: string, updates: { status?: ProjectStatus }) {
+    const previous = projects;
+    setProjects((current) =>
+      current.map((project) =>
+        project.id === id ? { ...project, ...updates } : project,
+      ),
+    );
+    setSaving(id);
+    setError(null);
+    const { error: requestError } = await updateProject(id, updates);
+    if (requestError) {
+      setProjects(previous);
+      setError(requestError.message);
+    }
+    setSaving(null);
+  }
+  return (
+    <>
+      <header className="module-header">
+        <span className="eyebrow dark">OPERACIÓN</span>
+        <h1>Proyectos</h1>
+        <p>
+          Da seguimiento al trabajo contratado, desde el anticipo hasta la
+          entrega.
+        </p>
+      </header>
+      <section className="panel prospects-panel">
+        <div className="prospects-toolbar">
+          <div className="search-field">
+            <Search size={17} />
+            <input
+              placeholder="Buscar proyecto, cliente o folio"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <span>{filtered.length} proyectos</span>
+        </div>
+        {error && <p className="auth-error panel-error">{error}</p>}
+        {loading ? (
+          <div className="empty-table">
+            <strong>Cargando proyectos…</strong>
+          </div>
+        ) : projects.length === 0 ? (
+          <div className="module-empty prospects-empty">
+            <div className="module-empty-icon">
+              <FolderKanban size={27} />
+            </div>
+            <h2>Todavía no hay proyectos</h2>
+            <p>
+              Cuando una cotización sea aceptada, su proyecto aparecerá aquí
+              automáticamente.
+            </p>
+            <Link className="new-button" to="/quotes">
+              Ir a cotizaciones
+            </Link>
+          </div>
+        ) : (
+          <div className="prospect-list">
+            {filtered.map((project) => {
+              const totalPaid = paid(project),
+                balance = Math.max(Number(project.price) - totalPaid, 0);
+              return (
+                <article className="project-list-row" key={project.id}>
+                  <button
+                    className="project-main"
+                    onClick={() => setTaskProject(project)}
+                  >
+                    <small>{project.folio}</small>
+                    <strong>{project.name}</strong>
+                    <span>
+                      {project.clients?.business_name ||
+                        project.clients?.name ||
+                        "Cliente"}{" "}
+                      · {project.project_tasks.length} tareas
+                    </span>
+                  </button>
+                  <button
+                    className="payment-summary"
+                    onClick={() => setPaymentProject(project)}
+                  >
+                    <small>Pagado · {money.format(totalPaid)}</small>
+                    <strong>{money.format(balance)} pendiente</strong>
+                  </button>
+                  <div className="project-progress">
+                    <small>Avance · {project.progress}%</small>
+                    <div className="progress">
+                      <i style={{ width: `${project.progress}%` }} />
+                    </div>
+                  </div>
+                  <select
+                    className="status project-status"
+                    value={project.status}
+                    disabled={saving === project.id}
+                    onChange={(e) =>
+                      void save(project.id, {
+                        status: e.target.value as ProjectStatus,
+                      })
+                    }
+                  >
+                    {statuses.map(([value, label]) => (
+                      <option value={value} key={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+      {paymentProject && (
+        <PaymentModal
+          project={paymentProject}
+          onClose={() => setPaymentProject(null)}
+          onSaved={async () => {
+            setPaymentProject(null);
+            await load();
+          }}
+        />
+      )}
+      {taskProject && (
+        <TasksModal
+          project={taskProject}
+          onClose={() => setTaskProject(null)}
+          onChanged={async () => {
+            await load();
+            const { data } = await listProjects();
+            setTaskProject(
+              data?.find((item) => item.id === taskProject.id) ?? null,
+            );
+          }}
+        />
+      )}
+    </>
+  );
 }
 
-function TasksModal({project,onClose,onChanged}:{project:Project;onClose:()=>void;onChanged:()=>Promise<void>}){
- const [showForm,setShowForm]=useState(false),[title,setTitle]=useState(''),[description,setDescription]=useState(''),[priority,setPriority]=useState<TaskPriority>('medium'),[assignee,setAssignee]=useState(''),[dueDate,setDueDate]=useState(''),[url,setUrl]=useState(''),[notes,setNotes]=useState(''),[staff,setStaff]=useState<Array<{id:string;full_name:string|null}>>([]),[saving,setSaving]=useState(false),[error,setError]=useState<string|null>(null)
- useEffect(()=>{void listActiveStaff().then(({data})=>setStaff((data as Array<{id:string;full_name:string|null}>|null)??[]))},[])
- async function submit(e:FormEvent){e.preventDefault();setSaving(true);const {error:requestError}=await createProjectTask({project_id:project.id,title,description:description||null,status:'todo',priority,assignee_id:assignee||null,due_date:dueDate||null,deliverable_url:url||null,deliverable_notes:notes||null});if(requestError){setError(requestError.message);setSaving(false);return}setTitle('');setDescription('');setDueDate('');setUrl('');setNotes('');setShowForm(false);setSaving(false);await onChanged()}
- async function changeTask(task:ProjectTask,status:TaskStatus){setError(null);const {error:requestError}=await updateProjectTask(task.id,{status});if(requestError)setError(requestError.message);else await onChanged()}
- async function removeTask(task:ProjectTask){if(!window.confirm(`¿Eliminar la tarea “${task.title}”?`))return;const {error:requestError}=await deleteProjectTask(task.id);if(requestError)setError(requestError.message);else await onChanged()}
- const tasks=[...project.project_tasks].sort((a,b)=>(a.due_date||'9999').localeCompare(b.due_date||'9999')), assigneeName=(id:string|null)=>staff.find((person)=>person.id===id)?.full_name||(id?'Usuario asignado':'Sin responsable')
- return <div className="modal-backdrop"><section className="prospect-modal tasks-modal" role="dialog" aria-modal="true"><div className="modal-header"><div><span className="eyebrow dark">{project.folio}</span><h2>{project.name}</h2><p>{project.progress}% completado</p></div><button className="icon-button" onClick={onClose} aria-label="Cerrar"><X/></button></div><div className="tasks-toolbar"><strong>Tareas y entregables</strong><button className="text-button" onClick={()=>setShowForm(!showForm)}><Plus size={16}/> Nueva tarea</button></div>{showForm&&<form className="prospect-form task-form" onSubmit={submit}><label>Tarea<input required value={title} onChange={(e)=>setTitle(e.target.value)}/></label><label>Descripción<textarea rows={2} value={description} onChange={(e)=>setDescription(e.target.value)}/></label><div className="form-grid"><label>Prioridad<select value={priority} onChange={(e)=>setPriority(e.target.value as TaskPriority)}>{Object.entries(priorityLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><label>Responsable<select value={assignee} onChange={(e)=>setAssignee(e.target.value)}><option value="">Sin asignar</option>{staff.map((person)=><option value={person.id} key={person.id}>{person.full_name||'Usuario activo'}</option>)}</select></label><label>Fecha límite<input type="date" value={dueDate} onChange={(e)=>setDueDate(e.target.value)}/></label><label>Enlace de entrega<input type="url" placeholder="https://" value={url} onChange={(e)=>setUrl(e.target.value)}/></label></div><label>Notas de entrega<textarea rows={2} value={notes} onChange={(e)=>setNotes(e.target.value)}/></label>{error&&<p className="auth-error">{error}</p>}<div className="modal-actions"><button type="button" className="period-button" onClick={()=>setShowForm(false)}>Cancelar</button><button className="new-button" disabled={saving}>{saving?'Guardando…':'Crear tarea'}</button></div></form>}{error&&!showForm&&<p className="auth-error">{error}</p>}<div className="task-list">{tasks.length?tasks.map((task)=><article className={`task-card priority-${task.priority}`} key={task.id}><div className="task-check">{task.status==='completed'?<CheckCircle2 size={20}/>:<ListTodo size={20}/>}</div><div><strong>{task.title}</strong><span>{assigneeName(task.assignee_id)}{task.due_date?` · vence ${new Intl.DateTimeFormat('es-MX',{dateStyle:'medium'}).format(new Date(`${task.due_date}T12:00:00`))}`:''}</span>{task.deliverable_url&&<a href={task.deliverable_url} target="_blank" rel="noreferrer">Ver entrega <ExternalLink size={12}/></a>}</div><select value={task.status} onChange={(e)=>void changeTask(task,e.target.value as TaskStatus)}>{taskStatuses.map(([value,label])=><option value={value} key={value}>{label}</option>)}</select><button className="icon-button" onClick={()=>void removeTask(task)} aria-label={`Eliminar ${task.title}`}><Trash2 size={16}/></button></article>):<div className="empty-table task-empty"><ListTodo size={23}/><strong>Sin tareas todavía</strong><span>Crea la primera para comenzar a medir el avance.</span></div>}</div></section></div>
+function TasksModal({
+  project,
+  onClose,
+  onChanged,
+}: {
+  project: Project;
+  onClose: () => void;
+  onChanged: () => Promise<void>;
+}) {
+  const [showForm, setShowForm] = useState(false),
+    [title, setTitle] = useState(""),
+    [description, setDescription] = useState(""),
+    [priority, setPriority] = useState<TaskPriority>("medium"),
+    [assignee, setAssignee] = useState(""),
+    [dueDate, setDueDate] = useState(""),
+    [url, setUrl] = useState(""),
+    [notes, setNotes] = useState(""),
+    [staff, setStaff] = useState<
+      Array<{ id: string; full_name: string | null }>
+    >([]),
+    [saving, setSaving] = useState(false),
+    [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    void listActiveStaff().then(({ data }) =>
+      setStaff(
+        (data as Array<{ id: string; full_name: string | null }> | null) ?? [],
+      ),
+    );
+  }, []);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const { error: requestError } = await createProjectTask({
+      project_id: project.id,
+      title,
+      description: description || null,
+      status: "todo",
+      priority,
+      assignee_id: assignee || null,
+      due_date: dueDate || null,
+      deliverable_url: url || null,
+      deliverable_notes: notes || null,
+    });
+    if (requestError) {
+      setError(requestError.message);
+      setSaving(false);
+      return;
+    }
+    setTitle("");
+    setDescription("");
+    setDueDate("");
+    setUrl("");
+    setNotes("");
+    setShowForm(false);
+    setSaving(false);
+    await onChanged();
+  }
+  async function changeTask(task: ProjectTask, status: TaskStatus) {
+    setError(null);
+    const { error: requestError } = await updateProjectTask(task.id, {
+      status,
+    });
+    if (requestError) setError(requestError.message);
+    else await onChanged();
+  }
+  async function removeTask(task: ProjectTask) {
+    if (!window.confirm(`¿Eliminar la tarea “${task.title}”?`)) return;
+    const { error: requestError } = await deleteProjectTask(task.id);
+    if (requestError) setError(requestError.message);
+    else await onChanged();
+  }
+  const tasks = [...project.project_tasks].sort((a, b) =>
+      (a.due_date || "9999").localeCompare(b.due_date || "9999"),
+    ),
+    assigneeName = (id: string | null) =>
+      staff.find((person) => person.id === id)?.full_name ||
+      (id ? "Usuario asignado" : "Sin responsable");
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="prospect-modal tasks-modal"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="modal-header">
+          <div>
+            <span className="eyebrow dark">{project.folio}</span>
+            <h2>{project.name}</h2>
+            <p>{project.progress}% completado</p>
+          </div>
+          <button className="icon-button" onClick={onClose} aria-label="Cerrar">
+            <X />
+          </button>
+        </div>
+        <div className="tasks-toolbar">
+          <strong>Tareas y entregables</strong>
+          <button
+            className="text-button"
+            onClick={() => setShowForm(!showForm)}
+          >
+            <Plus size={16} /> Nueva tarea
+          </button>
+        </div>
+        {showForm && (
+          <form className="prospect-form task-form" onSubmit={submit}>
+            <label>
+              Tarea
+              <input
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </label>
+            <label>
+              Descripción
+              <textarea
+                rows={2}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </label>
+            <div className="form-grid">
+              <label>
+                Prioridad
+                <select
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as TaskPriority)}
+                >
+                  {Object.entries(priorityLabels).map(([value, label]) => (
+                    <option value={value} key={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Responsable
+                <select
+                  value={assignee}
+                  onChange={(e) => setAssignee(e.target.value)}
+                >
+                  <option value="">Sin asignar</option>
+                  {staff.map((person) => (
+                    <option value={person.id} key={person.id}>
+                      {person.full_name || "Usuario activo"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Fecha límite
+                <input
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                />
+              </label>
+              <label>
+                Enlace de entrega
+                <input
+                  type="url"
+                  placeholder="https://"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+              </label>
+            </div>
+            <label>
+              Notas de entrega
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </label>
+            {error && <p className="auth-error">{error}</p>}
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="period-button"
+                onClick={() => setShowForm(false)}
+              >
+                Cancelar
+              </button>
+              <button className="new-button" disabled={saving}>
+                {saving ? "Guardando…" : "Crear tarea"}
+              </button>
+            </div>
+          </form>
+        )}
+        {error && !showForm && <p className="auth-error">{error}</p>}
+        <div className="task-list">
+          {tasks.length ? (
+            tasks.map((task) => (
+              <article
+                className={`task-card priority-${task.priority}`}
+                key={task.id}
+              >
+                <div className="task-check">
+                  {task.status === "completed" ? (
+                    <CheckCircle2 size={20} />
+                  ) : (
+                    <ListTodo size={20} />
+                  )}
+                </div>
+                <div>
+                  <strong>{task.title}</strong>
+                  <span>
+                    {assigneeName(task.assignee_id)}
+                    {task.due_date
+                      ? ` · vence ${new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(new Date(`${task.due_date}T12:00:00`))}`
+                      : ""}
+                  </span>
+                  {task.deliverable_url && (
+                    <a
+                      href={task.deliverable_url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Ver entrega <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+                <select
+                  value={task.status}
+                  onChange={(e) =>
+                    void changeTask(task, e.target.value as TaskStatus)
+                  }
+                >
+                  {taskStatuses.map(([value, label]) => (
+                    <option value={value} key={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="icon-button"
+                  onClick={() => void removeTask(task)}
+                  aria-label={`Eliminar ${task.title}`}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </article>
+            ))
+          ) : (
+            <div className="empty-table task-empty">
+              <ListTodo size={23} />
+              <strong>Sin tareas todavía</strong>
+              <span>Crea la primera para comenzar a medir el avance.</span>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
 }
 
-function PaymentModal({project,onClose,onSaved}:{project:Project;onClose:()=>void;onSaved:()=>Promise<void>}){const balance=Math.max(Number(project.price)-paid(project),0),[kind,setKind]=useState<PaymentKind>(project.project_payments.length?'partial':'deposit'),[method,setMethod]=useState<PaymentMethod>('transfer'),[amount,setAmount]=useState(''),[date,setDate]=useState(today()),[reference,setReference]=useState(''),[notes,setNotes]=useState(''),[saving,setSaving]=useState(false),[error,setError]=useState<string|null>(null);async function submit(e:FormEvent){e.preventDefault();setSaving(true);const{error:requestError}=await registerPayment({project_uuid:project.id,payment_kind:kind,payment_amount:Number(amount),payment_method:method,payment_date:date,payment_reference:reference||null,payment_notes:notes||null});if(requestError){setError(requestError.message);setSaving(false);return}await onSaved()}const history=[...project.project_payments].sort((a,b)=>b.paid_at.localeCompare(a.paid_at));return <div className="modal-backdrop"><section className="prospect-modal payment-modal" role="dialog" aria-modal="true"><div className="modal-header"><div><span className="eyebrow dark">{project.folio}</span><h2>Pagos del proyecto</h2></div><button className="icon-button" onClick={onClose} aria-label="Cerrar"><X/></button></div><div className="payment-balance"><div><span>Valor</span><strong>{money.format(project.price)}</strong></div><div><span>Pagado</span><strong>{money.format(paid(project))}</strong></div><div><span>Saldo</span><strong>{money.format(balance)}</strong></div></div>{balance>0?<form className="prospect-form" onSubmit={submit}><div className="form-grid"><label>Tipo<select value={kind} onChange={(e)=>setKind(e.target.value as PaymentKind)}>{Object.entries(kindLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><label>Método<select value={method} onChange={(e)=>setMethod(e.target.value as PaymentMethod)}>{Object.entries(methodLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><label>Monto<input type="number" min="0.01" max={balance} step="0.01" required value={amount} onChange={(e)=>setAmount(e.target.value)}/></label><label>Fecha<input type="date" required value={date} onChange={(e)=>setDate(e.target.value)}/></label></div><label>Referencia<input value={reference} onChange={(e)=>setReference(e.target.value)} placeholder="Folio o referencia bancaria"/></label><label>Notas<textarea rows={2} value={notes} onChange={(e)=>setNotes(e.target.value)}/></label>{error&&<p className="auth-error">{error}</p>}<div className="modal-actions"><button type="button" className="period-button" onClick={onClose}>Cancelar</button><button className="new-button" disabled={saving}>{saving?'Registrando…':'Registrar pago'}</button></div></form>:<p className="payment-complete">Este proyecto está liquidado.</p>}<div className="payment-history"><strong>Historial</strong>{history.length?history.map((payment)=><div key={payment.id}><WalletCards size={16}/><span><b>{kindLabels[payment.kind]}</b><small>{new Intl.DateTimeFormat('es-MX',{dateStyle:'medium'}).format(new Date(`${payment.paid_at}T12:00:00`))} · {methodLabels[payment.method]}</small></span><strong>{money.format(payment.amount)}</strong></div>):<p>Aún no hay pagos registrados.</p>}</div></section></div>}
+function PaymentModal({
+  project,
+  onClose,
+  onSaved,
+}: {
+  project: Project;
+  onClose: () => void;
+  onSaved: () => Promise<void>;
+}) {
+  const balance = Math.max(Number(project.price) - paid(project), 0),
+    [kind, setKind] = useState<PaymentKind>(
+      project.project_payments.length ? "partial" : "deposit",
+    ),
+    [method, setMethod] = useState<PaymentMethod>("transfer"),
+    [amount, setAmount] = useState(""),
+    [date, setDate] = useState(today()),
+    [reference, setReference] = useState(""),
+    [notes, setNotes] = useState(""),
+    [saving, setSaving] = useState(false),
+    [error, setError] = useState<string | null>(null);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const { error: requestError } = await registerPayment({
+      project_uuid: project.id,
+      payment_kind: kind,
+      payment_amount: Number(amount),
+      payment_method: method,
+      payment_date: date,
+      payment_reference: reference || null,
+      payment_notes: notes || null,
+    });
+    if (requestError) {
+      setError(requestError.message);
+      setSaving(false);
+      return;
+    }
+    await onSaved();
+  }
+  const history = [...project.project_payments].sort((a, b) =>
+    b.paid_at.localeCompare(a.paid_at),
+  );
+  return (
+    <div className="modal-backdrop">
+      <section
+        className="prospect-modal payment-modal"
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="modal-header">
+          <div>
+            <span className="eyebrow dark">{project.folio}</span>
+            <h2>Pagos del proyecto</h2>
+          </div>
+          <button className="icon-button" onClick={onClose} aria-label="Cerrar">
+            <X />
+          </button>
+        </div>
+        <div className="payment-balance">
+          <div>
+            <span>Valor</span>
+            <strong>{money.format(project.price)}</strong>
+          </div>
+          <div>
+            <span>Pagado</span>
+            <strong>{money.format(paid(project))}</strong>
+          </div>
+          <div>
+            <span>Saldo</span>
+            <strong>{money.format(balance)}</strong>
+          </div>
+        </div>
+        {balance > 0 ? (
+          <form className="prospect-form" onSubmit={submit}>
+            <div className="form-grid">
+              <label>
+                Tipo
+                <select
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value as PaymentKind)}
+                >
+                  {Object.entries(kindLabels).map(([value, label]) => (
+                    <option value={value} key={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Método
+                <select
+                  value={method}
+                  onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+                >
+                  {Object.entries(methodLabels).map(([value, label]) => (
+                    <option value={value} key={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Monto
+                <input
+                  type="number"
+                  min="0.01"
+                  max={balance}
+                  step="0.01"
+                  required
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </label>
+              <label>
+                Fecha
+                <input
+                  type="date"
+                  required
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </label>
+            </div>
+            <label>
+              Referencia
+              <input
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                placeholder="Folio o referencia bancaria"
+              />
+            </label>
+            <label>
+              Notas
+              <textarea
+                rows={2}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+            </label>
+            {error && <p className="auth-error">{error}</p>}
+            <div className="modal-actions">
+              <button type="button" className="period-button" onClick={onClose}>
+                Cancelar
+              </button>
+              <button className="new-button" disabled={saving}>
+                {saving ? "Registrando…" : "Registrar pago"}
+              </button>
+            </div>
+          </form>
+        ) : (
+          <p className="payment-complete">Este proyecto está liquidado.</p>
+        )}
+        <div className="payment-history">
+          <strong>Historial</strong>
+          {history.length ? (
+            history.map((payment) => (
+              <div key={payment.id}>
+                <WalletCards size={16} />
+                <span>
+                  <b>{kindLabels[payment.kind]}</b>
+                  <small>
+                    {new Intl.DateTimeFormat("es-MX", {
+                      dateStyle: "medium",
+                    }).format(new Date(`${payment.paid_at}T12:00:00`))}{" "}
+                    · {methodLabels[payment.method]}
+                  </small>
+                </span>
+                <strong>{money.format(payment.amount)}</strong>
+                <button
+                  className="icon-button pdf-button"
+                  onClick={() =>
+                    downloadPaymentReceiptPdf({
+                      project,
+                      payment,
+                      kindLabel: kindLabels[payment.kind],
+                      methodLabel: methodLabels[payment.method],
+                    })
+                  }
+                  aria-label="Descargar recibo"
+                  title="Descargar recibo PDF"
+                >
+                  <Download size={15} />
+                </button>
+              </div>
+            ))
+          ) : (
+            <p>Aún no hay pagos registrados.</p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}

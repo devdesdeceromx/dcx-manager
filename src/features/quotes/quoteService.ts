@@ -2,7 +2,7 @@ import { supabase } from '@/shared/lib/supabase'
 import type { Quote, QuoteInput, QuoteItemInput, QuoteStatus } from './types'
 
 export async function listQuotes() {
-  return supabase.from('quotes').select('*, clients(name, business_name)').order('created_at', { ascending: false }).returns<Quote[]>()
+  return supabase.from('quotes').select('*, clients(name, business_name, email), quote_items(description, quantity, unit_price, sort_order)').order('created_at', { ascending: false }).returns<Quote[]>()
 }
 
 export async function createQuote(input: QuoteInput, items: QuoteItemInput[]) {

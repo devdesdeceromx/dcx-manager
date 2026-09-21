@@ -1,46 +1,40 @@
-import { FolderKanban, Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { FolderKanban, Search, WalletCards, X } from 'lucide-react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { listProjects, updateProject, type Project, type ProjectStatus } from './projectService'
+import { listProjects, registerPayment, updateProject, type PaymentKind, type PaymentMethod, type Project, type ProjectStatus } from './projectService'
 
-const statuses: Array<[ProjectStatus, string]> = [
-  ['preparation', 'Preparación'], ['waiting_deposit', 'Esperando anticipo'], ['ready_to_start', 'Listo para iniciar'],
-  ['development', 'En desarrollo'], ['review', 'En revisión'], ['adjustments', 'Ajustes'],
-  ['ready_delivery', 'Listo para entregar'], ['delivered', 'Entregado'], ['warranty', 'Garantía'],
-  ['closed', 'Cerrado'], ['paused', 'Pausado'], ['cancelled', 'Cancelado'],
-]
-
-const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' })
+const statuses: Array<[ProjectStatus, string]> = [['preparation','Preparación'],['waiting_deposit','Esperando anticipo'],['ready_to_start','Listo para iniciar'],['development','En desarrollo'],['review','En revisión'],['adjustments','Ajustes'],['ready_delivery','Listo para entregar'],['delivered','Entregado'],['warranty','Garantía'],['closed','Cerrado'],['paused','Pausado'],['cancelled','Cancelado']]
+const kindLabels: Record<PaymentKind,string> = { deposit:'Anticipo', partial:'Abono', final:'Liquidación' }
+const methodLabels: Record<PaymentMethod,string> = { transfer:'Transferencia', cash:'Efectivo', card:'Tarjeta', other:'Otro' }
+const money = new Intl.NumberFormat('es-MX', { style:'currency', currency:'MXN' })
+const today = () => new Date().toISOString().slice(0,10)
+const paid = (project:Project) => project.project_payments.reduce((total,payment) => total + Number(payment.amount), 0)
 
 export function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [projects,setProjects] = useState<Project[]>([]), [search,setSearch] = useState(''), [loading,setLoading] = useState(true)
+  const [saving,setSaving] = useState<string|null>(null), [error,setError] = useState<string|null>(null), [paymentProject,setPaymentProject] = useState<Project|null>(null)
+  const load = async () => { const {data,error:requestError} = await listProjects(); setProjects(data ?? []); setError(requestError?.message ?? null); setLoading(false) }
+  useEffect(() => { void listProjects().then(({data,error:requestError}) => { setProjects(data ?? []); setError(requestError?.message ?? null); setLoading(false) }) }, [])
+  const filtered = useMemo(() => projects.filter((project) => [project.folio,project.name,project.clients?.name,project.clients?.business_name].some((value) => value?.toLowerCase().includes(search.toLowerCase()))), [projects,search])
+  async function save(id:string,updates:{status?:ProjectStatus;progress?:number}) { const previous=projects; setProjects((current)=>current.map((project)=>project.id===id?{...project,...updates}:project)); setSaving(id); setError(null); const {error:requestError}=await updateProject(id,updates); if(requestError){setProjects(previous);setError(requestError.message)} setSaving(null) }
 
-  useEffect(() => { void listProjects().then(({ data, error: requestError }) => { setProjects(data ?? []); setError(requestError?.message ?? null); setLoading(false) }) }, [])
-  const filtered = useMemo(() => projects.filter((project) => [project.folio, project.name, project.clients?.name, project.clients?.business_name].some((value) => value?.toLowerCase().includes(search.toLowerCase()))), [projects, search])
+  return <><header className="module-header"><span className="eyebrow dark">OPERACIÓN</span><h1>Proyectos</h1><p>Da seguimiento al trabajo contratado, desde el anticipo hasta la entrega.</p></header>
+    <section className="panel prospects-panel"><div className="prospects-toolbar"><div className="search-field"><Search size={17}/><input placeholder="Buscar proyecto, cliente o folio" value={search} onChange={(event)=>setSearch(event.target.value)}/></div><span>{filtered.length} proyectos</span></div>{error&&<p className="auth-error panel-error">{error}</p>}
+    {loading?<div className="empty-table"><strong>Cargando proyectos…</strong></div>:projects.length===0?<div className="module-empty prospects-empty"><div className="module-empty-icon"><FolderKanban size={27}/></div><h2>Todavía no hay proyectos</h2><p>Cuando una cotización sea aceptada, su proyecto aparecerá aquí automáticamente.</p><Link className="new-button" to="/quotes">Ir a cotizaciones</Link></div>:<div className="prospect-list">{filtered.map((project)=>{const totalPaid=paid(project),balance=Math.max(Number(project.price)-totalPaid,0);return <article className="project-list-row" key={project.id}>
+      <div><small>{project.folio}</small><strong>{project.name}</strong><span>{project.clients?.business_name||project.clients?.name||'Cliente'}</span></div>
+      <button className="payment-summary" onClick={()=>setPaymentProject(project)}><small>Pagado · {money.format(totalPaid)}</small><strong>{money.format(balance)} pendiente</strong></button>
+      <label className="project-progress"><small>Avance · {project.progress}%</small><input aria-label={`Avance de ${project.name}`} type="range" min="0" max="100" step="5" value={project.progress} disabled={saving===project.id} onChange={(event)=>setProjects((current)=>current.map((item)=>item.id===project.id?{...item,progress:Number(event.target.value)}:item))} onMouseUp={(event)=>void save(project.id,{progress:Number(event.currentTarget.value)})} onTouchEnd={(event)=>void save(project.id,{progress:Number(event.currentTarget.value)})}/></label>
+      <select className="status project-status" value={project.status} disabled={saving===project.id} onChange={(event)=>void save(project.id,{status:event.target.value as ProjectStatus})}>{statuses.map(([value,label])=><option value={value} key={value}>{label}</option>)}</select>
+    </article>})}</div>}</section>{paymentProject&&<PaymentModal project={paymentProject} onClose={()=>setPaymentProject(null)} onSaved={async()=>{setPaymentProject(null);await load()}}/>}</>
+}
 
-  async function save(id: string, updates: { status?: ProjectStatus; progress?: number }) {
-    const previous = projects
-    setProjects((current) => current.map((project) => project.id === id ? { ...project, ...updates } : project))
-    setSaving(id); setError(null)
-    const { error: requestError } = await updateProject(id, updates)
-    if (requestError) { setProjects(previous); setError(requestError.message) }
-    setSaving(null)
-  }
-
-  return <>
-    <header className="module-header"><span className="eyebrow dark">OPERACIÓN</span><h1>Proyectos</h1><p>Da seguimiento al trabajo contratado, desde el anticipo hasta la entrega.</p></header>
-    <section className="panel prospects-panel"><div className="prospects-toolbar"><div className="search-field"><Search size={17}/><input placeholder="Buscar proyecto, cliente o folio" value={search} onChange={(event) => setSearch(event.target.value)}/></div><span>{filtered.length} proyectos</span></div>
-      {error && <p className="auth-error panel-error">{error}</p>}
-      {loading ? <div className="empty-table"><strong>Cargando proyectos…</strong></div> : projects.length === 0 ? <div className="module-empty prospects-empty"><div className="module-empty-icon"><FolderKanban size={27}/></div><h2>Todavía no hay proyectos</h2><p>Cuando una cotización sea aceptada, su proyecto aparecerá aquí automáticamente.</p><Link className="new-button" to="/quotes">Ir a cotizaciones</Link></div> : <div className="prospect-list">{filtered.map((project) => <article className="project-list-row" key={project.id}>
-        <div><small>{project.folio}</small><strong>{project.name}</strong><span>{project.clients?.business_name || project.clients?.name || 'Cliente'}</span></div>
-        <div><small>Valor</small><strong className="quote-total">{money.format(project.price)}</strong></div>
-        <label className="project-progress"><small>Avance · {project.progress}%</small><input aria-label={`Avance de ${project.name}`} type="range" min="0" max="100" step="5" value={project.progress} disabled={saving === project.id} onChange={(event) => setProjects((current) => current.map((item) => item.id === project.id ? { ...item, progress: Number(event.target.value) } : item))} onMouseUp={(event) => void save(project.id, { progress: Number(event.currentTarget.value) })} onTouchEnd={(event) => void save(project.id, { progress: Number(event.currentTarget.value) })}/></label>
-        <select className="status project-status" value={project.status} disabled={saving === project.id} onChange={(event) => void save(project.id, { status: event.target.value as ProjectStatus })}>{statuses.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
-      </article>)}</div>}
-    </section>
-  </>
+function PaymentModal({project,onClose,onSaved}:{project:Project;onClose:()=>void;onSaved:()=>Promise<void>}) {
+  const balance=Math.max(Number(project.price)-paid(project),0), [kind,setKind]=useState<PaymentKind>(project.project_payments.length?'partial':'deposit'), [method,setMethod]=useState<PaymentMethod>('transfer'), [amount,setAmount]=useState(''), [date,setDate]=useState(today()), [reference,setReference]=useState(''), [notes,setNotes]=useState(''), [saving,setSaving]=useState(false), [error,setError]=useState<string|null>(null)
+  async function submit(event:FormEvent){event.preventDefault();setSaving(true);setError(null);const {error:requestError}=await registerPayment({project_uuid:project.id,payment_kind:kind,payment_amount:Number(amount),payment_method:method,payment_date:date,payment_reference:reference||null,payment_notes:notes||null});if(requestError){setError(requestError.message);setSaving(false);return}await onSaved()}
+  const history=[...project.project_payments].sort((a,b)=>b.paid_at.localeCompare(a.paid_at))
+  return <div className="modal-backdrop" role="presentation"><section className="prospect-modal payment-modal" role="dialog" aria-modal="true"><div className="modal-header"><div><span className="eyebrow dark">{project.folio}</span><h2>Pagos del proyecto</h2></div><button className="icon-button" onClick={onClose} aria-label="Cerrar"><X/></button></div>
+    <div className="payment-balance"><div><span>Valor</span><strong>{money.format(project.price)}</strong></div><div><span>Pagado</span><strong>{money.format(paid(project))}</strong></div><div><span>Saldo</span><strong>{money.format(balance)}</strong></div></div>
+    {balance>0?<form className="prospect-form" onSubmit={submit}><div className="form-grid"><label>Tipo<select value={kind} onChange={(e)=>setKind(e.target.value as PaymentKind)}>{Object.entries(kindLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><label>Método<select value={method} onChange={(e)=>setMethod(e.target.value as PaymentMethod)}>{Object.entries(methodLabels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><label>Monto<input type="number" min="0.01" max={balance} step="0.01" required value={amount} onChange={(e)=>setAmount(e.target.value)}/></label><label>Fecha<input type="date" required value={date} onChange={(e)=>setDate(e.target.value)}/></label></div><label>Referencia<input value={reference} onChange={(e)=>setReference(e.target.value)} placeholder="Folio o referencia bancaria"/></label><label>Notas<textarea rows={2} value={notes} onChange={(e)=>setNotes(e.target.value)}/></label>{error&&<p className="auth-error">{error}</p>}<div className="modal-actions"><button type="button" className="period-button" onClick={onClose}>Cancelar</button><button className="new-button" disabled={saving}>{saving?'Registrando…':'Registrar pago'}</button></div></form>:<p className="payment-complete">Este proyecto está liquidado.</p>}
+    <div className="payment-history"><strong>Historial</strong>{history.length?history.map((payment)=><div key={payment.id}><WalletCards size={16}/><span><b>{kindLabels[payment.kind]}</b><small>{new Intl.DateTimeFormat('es-MX',{dateStyle:'medium'}).format(new Date(`${payment.paid_at}T12:00:00`))} · {methodLabels[payment.method]}</small></span><strong>{money.format(payment.amount)}</strong></div>):<p>Aún no hay pagos registrados.</p>}</div>
+  </section></div>
 }

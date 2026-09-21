@@ -1,5 +1,6 @@
 import { ArrowRight, CheckCircle2, Pencil, Plus, Search, UserRoundPlus, X } from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { convertProspect, createProspect, listProspects, updateProspect, updateProspectStatus } from './prospectService'
 import type { Prospect, ProspectInput, ProspectSource, ProspectStatus } from './types'
 
@@ -8,9 +9,10 @@ const sourceLabels: Record<ProspectSource, string> = { referral: 'Recomendación
 const emptyForm: ProspectInput = { name: '', business_name: '', phone: '', email: '', service_interest: '', source: 'other', description: '', notes: '', status: 'new' }
 
 export function ProspectsPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [modalOpen, setModalOpen] = useState(() => searchParams.get('new') === '1')
   const [selected, setSelected] = useState<Prospect | null>(null)
   const [form, setForm] = useState<ProspectInput>(emptyForm)
   const [search, setSearch] = useState('')
@@ -32,6 +34,12 @@ export function ProspectsPage() {
       setLoading(false)
     })
   }, [])
+
+  useEffect(() => {
+    if (searchParams.get('new') === '1') {
+      setSearchParams({}, { replace: true })
+    }
+  }, [searchParams, setSearchParams])
 
   const filtered = useMemo(() => prospects.filter((prospect) => {
     const query = search.trim().toLowerCase()

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { listActivityAudit, type ActivityEntry } from './activityService'
 
 const entityLabels:Record<string,string>={prospects:'Prospecto',clients:'Cliente',quotes:'Cotización',projects:'Proyecto',project_payments:'Pago',project_tasks:'Tarea',project_expenses:'Gasto',profile:'Usuario',business_settings:'Configuración'}
-const actionLabels:Record<string,string>={created:'Creó',updated:'Actualizó',converted_to_client:'Convirtió a cliente',quote_accepted_project_created:'Aceptó cotización y creó proyecto',staff_updated:'Cambió permisos'}
+const actionLabels:Record<string,string>={created:'Creó',updated:'Actualizó',converted_to_client:'Convirtió a cliente',quote_accepted_project_created:'Aceptó cotización y creó proyecto',staff_updated:'Cambió permisos',staff_invited:'Invitó a un usuario',staff_invitation_resent:'Reenvió una invitación',staff_invitation_cancelled:'Canceló una invitación'}
 const dateTime=new Intl.DateTimeFormat('es-MX',{dateStyle:'medium',timeStyle:'short'})
 
 export function ActivityPage(){

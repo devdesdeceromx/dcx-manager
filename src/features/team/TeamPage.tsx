@@ -1,9 +1,22 @@
-import { Plus, Search, ShieldCheck, UserCheck, UserPlus, UserX, X } from "lucide-react";
+import {
+  Clock3,
+  Mail,
+  Plus,
+  RotateCw,
+  Search,
+  ShieldCheck,
+  Trash2,
+  UserCheck,
+  UserX,
+  X,
+} from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useAuth } from "@/features/auth/AuthContext";
 import {
+  cancelStaffInvitation,
   inviteStaffMember,
   listStaff,
+  resendStaffInvitation,
   updateStaffMember,
   type AppRole,
   type StaffMember,
@@ -23,6 +36,7 @@ export function TeamPage() {
     [search, setSearch] = useState(""),
     [loading, setLoading] = useState(true),
     [saving, setSaving] = useState<string | null>(null),
+    [notice, setNotice] = useState<string | null>(null),
     [error, setError] = useState<string | null>(null),
     [inviteOpen, setInviteOpen] = useState(false);
   const load = async () => {
@@ -62,6 +76,35 @@ export function TeamPage() {
     else await load();
     setSaving(null);
   }
+  async function managePending(
+    member: StaffMember,
+    action: "resend" | "cancel",
+  ) {
+    if (
+      action === "cancel" &&
+      !window.confirm(
+        `¿Cancelar la invitación para ${member.email}? Esta persona ya no podrá aceptarla.`,
+      )
+    )
+      return;
+    setSaving(member.id);
+    setError(null);
+    setNotice(null);
+    const { error: requestError } =
+      action === "resend"
+        ? await resendStaffInvitation(member.id)
+        : await cancelStaffInvitation(member.id);
+    if (requestError) setError(requestError.message);
+    else {
+      setNotice(
+        action === "resend"
+          ? `Invitación reenviada a ${member.email}.`
+          : `Invitación cancelada para ${member.email}.`,
+      );
+      await load();
+    }
+    setSaving(null);
+  }
   return (
     <>
       <header className="module-header module-header-row">
@@ -91,6 +134,19 @@ export function TeamPage() {
           </div>
         </article>
         <article>
+          <Clock3 />
+          <div>
+            <strong>
+              {
+                members.filter(
+                  (member) => member.invitation_status === "pending",
+                ).length
+              }
+            </strong>
+            <span>Invitaciones pendientes</span>
+          </div>
+        </article>
+        <article>
           <UserX />
           <div>
             <strong>
@@ -113,6 +169,7 @@ export function TeamPage() {
           <span>{filtered.length} integrantes</span>
         </div>
         {error && <p className="auth-error panel-error">{error}</p>}
+        {notice && <p className="team-notice">{notice}</p>}
         {loading ? (
           <div className="empty-table">
             <strong>Cargando equipo…</strong>
@@ -132,6 +189,13 @@ export function TeamPage() {
                     {member.email || "Correo no disponible"}
                     {member.id === user?.id ? " · Tú" : ""}
                   </span>
+                  <small
+                    className={`invitation-status ${member.invitation_status}`}
+                  >
+                    {member.invitation_status === "pending"
+                      ? "Invitación pendiente"
+                      : "Acceso confirmado"}
+                  </small>
                 </div>
                 <select
                   aria-label={`Rol de ${member.full_name || member.email}`}
@@ -147,25 +211,47 @@ export function TeamPage() {
                     </option>
                   ))}
                 </select>
-                <button
-                  className={`access-button ${member.is_active ? "active" : "inactive"}`}
-                  disabled={saving === member.id || member.id === user?.id}
-                  onClick={() =>
-                    void change(member, { is_active: !member.is_active })
-                  }
-                >
-                  {member.is_active ? (
-                    <>
-                      <UserCheck size={15} />
-                      Activo
-                    </>
-                  ) : (
-                    <>
-                      <UserX size={15} />
-                      Suspendido
-                    </>
-                  )}
-                </button>
+                {member.invitation_status === "pending" ? (
+                  <div className="invitation-actions">
+                    <button
+                      className="access-button active"
+                      disabled={saving === member.id}
+                      onClick={() => void managePending(member, "resend")}
+                      title="Reenviar invitación"
+                    >
+                      <RotateCw size={15} /> Reenviar
+                    </button>
+                    <button
+                      className="icon-button invitation-cancel"
+                      disabled={saving === member.id}
+                      onClick={() => void managePending(member, "cancel")}
+                      aria-label={`Cancelar invitación de ${member.full_name || member.email}`}
+                      title="Cancelar invitación"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className={`access-button ${member.is_active ? "active" : "inactive"}`}
+                    disabled={saving === member.id || member.id === user?.id}
+                    onClick={() =>
+                      void change(member, { is_active: !member.is_active })
+                    }
+                  >
+                    {member.is_active ? (
+                      <>
+                        <UserCheck size={15} />
+                        Activo
+                      </>
+                    ) : (
+                      <>
+                        <UserX size={15} />
+                        Suspendido
+                      </>
+                    )}
+                  </button>
+                )}
               </article>
             ))}
           </div>
@@ -187,7 +273,7 @@ export function TeamPage() {
 }
 
 function InviteModal({onClose,onInvited}:{onClose:()=>void;onInvited:()=>Promise<void>}) {
-  const [fullName,setFullName]=useState(''),[email,setEmail]=useState(''),[sending,setSending]=useState(false),[error,setError]=useState<string|null>(null)
-  async function submit(event:FormEvent){event.preventDefault();setSending(true);setError(null);const{error:requestError}=await inviteStaffMember(email,fullName);if(requestError){setError(requestError.message);setSending(false);return}await onInvited()}
-  return <div className="modal-backdrop"><section className="prospect-modal invite-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title"><div className="modal-header"><div><span className="eyebrow dark">NUEVO ACCESO</span><h2 id="invite-title">Invitar usuario</h2><p>Recibirá un correo para establecer su contraseña.</p></div><button className="icon-button" onClick={onClose} aria-label="Cerrar"><X/></button></div><form className="prospect-form" onSubmit={submit}><label>Nombre completo<input required autoFocus value={fullName} onChange={(e)=>setFullName(e.target.value)} placeholder="Nombre del integrante"/></label><label>Correo electrónico<input required type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="nombre@empresa.com"/></label><div className="invite-role"><UserPlus size={18}/><div><strong>Acceso inicial: Solo lectura</strong><span>Después de aceptar la invitación podrás cambiar su rol desde esta pantalla.</span></div></div>{error&&<p className="auth-error">{error}</p>}<div className="modal-actions"><button type="button" className="period-button" onClick={onClose}>Cancelar</button><button className="new-button" disabled={sending}>{sending?'Enviando…':'Enviar invitación'}</button></div></form></section></div>
+  const [fullName,setFullName]=useState(''),[email,setEmail]=useState(''),[role,setRole]=useState<AppRole>('read_only'),[sending,setSending]=useState(false),[error,setError]=useState<string|null>(null)
+  async function submit(event:FormEvent){event.preventDefault();setSending(true);setError(null);const{error:requestError}=await inviteStaffMember(email,fullName,role);if(requestError){setError(requestError.message);setSending(false);return}await onInvited()}
+  return <div className="modal-backdrop"><section className="prospect-modal invite-modal" role="dialog" aria-modal="true" aria-labelledby="invite-title"><div className="modal-header"><div><span className="eyebrow dark">NUEVO ACCESO</span><h2 id="invite-title">Invitar usuario</h2><p>Recibirá un correo para establecer su contraseña.</p></div><button className="icon-button" onClick={onClose} aria-label="Cerrar"><X/></button></div><form className="prospect-form" onSubmit={submit}><label>Nombre completo<input required autoFocus value={fullName} onChange={(e)=>setFullName(e.target.value)} placeholder="Nombre del integrante"/></label><label>Correo electrónico<input required type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="nombre@empresa.com"/></label><label>Rol inicial<select value={role} onChange={(e)=>setRole(e.target.value as AppRole)}>{Object.entries(roles).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><div className="invite-role"><Mail size={18}/><div><strong>Invitación segura</strong><span>El acceso tendrá el rol seleccionado desde el momento en que sea aceptado.</span></div></div>{error&&<p className="auth-error">{error}</p>}<div className="modal-actions"><button type="button" className="period-button" onClick={onClose}>Cancelar</button><button className="new-button" disabled={sending}>{sending?'Enviando…':'Enviar invitación'}</button></div></form></section></div>
 }

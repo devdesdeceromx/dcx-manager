@@ -10,6 +10,7 @@ import { CalendarPage } from '@/features/calendar/CalendarPage'
 import { FinancesPage } from '@/features/finances/FinancesPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
 import { TeamPage } from '@/features/team/TeamPage'
+import { ActivityPage } from '@/features/activity/ActivityPage'
 import { AppLayout } from '@/shared/components/AppLayout'
 
 export function App() {
@@ -27,6 +28,7 @@ export function App() {
           <Route path="/finances" element={<FinancesPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/team" element={<TeamPage />} />
+          <Route path="/activity" element={<ActivityPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

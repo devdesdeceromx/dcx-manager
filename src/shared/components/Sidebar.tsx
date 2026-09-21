@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, ChevronDown, CircleDollarSign, FileText, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck, UserRoundSearch, Users, X } from 'lucide-react'
+import { Activity, BarChart3, CalendarDays, ChevronDown, CircleDollarSign, FileText, LayoutDashboard, LogOut, Menu, Settings, ShieldCheck, UserRoundSearch, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
@@ -33,6 +33,7 @@ export function Sidebar() {
           <span className="nav-label nav-label-secondary">Sistema</span>
           <NotificationCenter />
           <NavLink to="/team" onClick={() => setOpen(false)} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}><ShieldCheck size={19} /><span>Equipo y permisos</span></NavLink>
+          <NavLink to="/activity" onClick={() => setOpen(false)} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}><Activity size={19} /><span>Actividad</span></NavLink>
           <NavLink to="/settings" onClick={() => setOpen(false)} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}><Settings size={19} /><span>Configuración</span></NavLink>
         </nav>
         <div className="sidebar-user"><div className="avatar">{initials}</div><div><strong>{displayName}</strong><span>{email}</span></div><ChevronDown size={16} /></div>

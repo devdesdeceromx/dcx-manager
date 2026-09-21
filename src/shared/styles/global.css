@@ -330,6 +330,23 @@ a { color: inherit; text-decoration: none; }
 .dashboard-finance div { padding-right: 18px; border-right: 1px solid var(--line); }
 .dashboard-finance span, .dashboard-finance strong { display: block; }
 .dashboard-finance span { color: var(--muted); font-size: .69rem; }.dashboard-finance strong { margin-top: 5px; color: var(--ink); font-size: .9rem; }
+.notification-backdrop { position: fixed; inset: 0; z-index: 80; background: rgba(7,10,22,.45); }
+.notification-drawer { position: absolute; top: 0; right: 0; width: min(100%,420px); height: 100%; overflow-y: auto; padding: 25px; background: #fff; box-shadow: -18px 0 60px rgba(7,10,22,.18); color: var(--ink); }
+.notification-drawer header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.notification-drawer h2 { margin: 7px 0 0; font: 700 1.35rem Manrope,sans-serif; }
+.notification-actions { min-height: 52px; display: flex; align-items: center; justify-content: space-between; margin-top: 16px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .72rem; }
+.notification-actions .text-button { display: flex; align-items: center; gap: 5px; }
+.notification-list { display: grid; }
+.notification-list > p { color: var(--muted); font-size: .75rem; }
+.notification-item { position: relative; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; width: 100%; padding: 15px 4px; border: 0; border-bottom: 1px solid #f0f0f4; background: transparent; color: var(--purple); text-align: left; }
+.notification-item > svg { margin-top: 2px; }
+.notification-item strong, .notification-item small { display: block; }
+.notification-item strong { color: var(--ink); font-size: .78rem; }
+.notification-item small { margin-top: 4px; color: var(--muted); font-size: .7rem; line-height: 1.4; }
+.notification-item i { width: 7px; height: 7px; margin-top: 6px; border-radius: 50%; background: var(--purple); }
+.notification-item.read { opacity: .58; }.notification-item.kind-overdue { color: #d05d56; }.notification-item.kind-deposit { color: #27936d; }.notification-item.kind-quote { color: #4a7fc0; }
+.notification-empty { min-height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #aaaebe; text-align: center; }
+.notification-empty strong { margin: 10px 0 5px; color: #55596b; font-size: .85rem; }.notification-empty span { color: var(--muted); font-size: .72rem; }
 
 @media (max-width: 1080px) {
   .metrics-grid { grid-template-columns: repeat(2, 1fr); }

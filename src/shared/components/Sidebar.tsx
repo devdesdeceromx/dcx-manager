@@ -1,8 +1,9 @@
-import { BarChart3, Bell, CalendarDays, ChevronDown, CircleDollarSign, FileText, LayoutDashboard, LogOut, Menu, Settings, UserRoundSearch, Users, X } from 'lucide-react'
+import { BarChart3, CalendarDays, ChevronDown, CircleDollarSign, FileText, LayoutDashboard, LogOut, Menu, Settings, UserRoundSearch, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useAuth } from '@/features/auth/AuthContext'
 import { Brand } from './Brand'
+import { NotificationCenter } from '@/features/notifications/NotificationCenter'
 
 const items = [
   { label: 'Resumen', icon: LayoutDashboard, to: '/dashboard' },
@@ -30,7 +31,7 @@ export function Sidebar() {
           <span className="nav-label">Espacio de trabajo</span>
           {items.map(({ label, icon: Icon, to }) => <NavLink key={label} to={to} onClick={() => setOpen(false)} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}><Icon size={19} /><span>{label}</span></NavLink>)}
           <span className="nav-label nav-label-secondary">Sistema</span>
-          <button className="nav-item" type="button"><Bell size={19} /><span>Notificaciones</span><span className="badge">3</span></button>
+          <NotificationCenter />
           <button className="nav-item" type="button"><Settings size={19} /><span>Configuración</span></button>
         </nav>
         <div className="sidebar-user"><div className="avatar">{initials}</div><div><strong>{displayName}</strong><span>{email}</span></div><ChevronDown size={16} /></div>

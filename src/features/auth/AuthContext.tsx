@@ -16,6 +16,8 @@ type AuthContextValue = {
   user: User | null;
   role: AppRole | null;
   signIn: (email: string, password: string) => Promise<string | null>;
+  requestPasswordReset: (email: string) => Promise<string | null>;
+  updatePassword: (password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
 };
 
@@ -65,6 +67,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
           email,
           password,
         });
+        return error?.message ?? null;
+      },
+      requestPasswordReset: async (email: string) => {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/auth/update-password`,
+        });
+        return error?.message ?? null;
+      },
+      updatePassword: async (password: string) => {
+        const { error } = await supabase.auth.updateUser({ password });
         return error?.message ?? null;
       },
       signOut: async () => {

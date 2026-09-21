@@ -58,14 +58,14 @@ Deno.serve(async (request) => {
       const email = String(body.email ?? "").trim().toLowerCase();
       const fullName = String(body.fullName ?? "").trim();
       const role = String(body.role ?? "read_only") as AppRole;
+      const redirectTo = "http://127.0.0.1:5173/auth/update-password";
       if (!email) throw new Error("El correo es obligatorio");
       if (!fullName) throw new Error("El nombre es obligatorio");
       if (!roles.includes(role))
         throw new Error("El rol seleccionado no es válido");
-
       const { data, error } = await adminClient.auth.admin.inviteUserByEmail(
         email,
-        { data: { full_name: fullName, role } },
+        { redirectTo, data: { full_name: fullName, role } },
       );
       if (error) throw error;
       if (!data.user) throw new Error("No fue posible crear la invitación");

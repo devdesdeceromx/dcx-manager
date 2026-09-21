@@ -11,6 +11,8 @@ import {
   X,
 } from "lucide-react";
 import { downloadPaymentReceiptPdf } from "@/shared/lib/pdf";
+import { useAuth } from "@/features/auth/AuthContext";
+import { canManageFinance, canManageOperations } from "@/shared/lib/permissions";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -79,6 +81,9 @@ const paid = (project: Project) =>
   );
 
 export function ProjectsPage() {
+  const { role } = useAuth();
+  const canEditOperations = canManageOperations(role);
+  const canEditFinance = canManageFinance(role);
   const [projects, setProjects] = useState<Project[]>([]),
     [search, setSearch] = useState(""),
     [loading, setLoading] = useState(true),
@@ -177,7 +182,7 @@ export function ProjectsPage() {
                 <article className="project-list-row" key={project.id}>
                   <button
                     className="project-main"
-                    onClick={() => setTaskProject(project)}
+                    onClick={() => (canEditOperations || role === "collaborator") && setTaskProject(project)}
                   >
                     <small>{project.folio}</small>
                     <strong>{project.name}</strong>
@@ -190,7 +195,7 @@ export function ProjectsPage() {
                   </button>
                   <button
                     className="payment-summary"
-                    onClick={() => setPaymentProject(project)}
+                    onClick={() => canEditFinance && setPaymentProject(project)}
                   >
                     <small>Pagado · {money.format(totalPaid)}</small>
                     <strong>{money.format(balance)} pendiente</strong>
@@ -204,7 +209,7 @@ export function ProjectsPage() {
                   <select
                     className="status project-status"
                     value={project.status}
-                    disabled={saving === project.id}
+                    disabled={!canEditOperations || saving === project.id}
                     onChange={(e) =>
                       void save(project.id, {
                         status: e.target.value as ProjectStatus,
@@ -236,6 +241,7 @@ export function ProjectsPage() {
       {taskProject && (
         <TasksModal
           project={taskProject}
+          canManage={canEditOperations}
           onClose={() => setTaskProject(null)}
           onChanged={async () => {
             await load();
@@ -254,10 +260,12 @@ function TasksModal({
   project,
   onClose,
   onChanged,
+  canManage,
 }: {
   project: Project;
   onClose: () => void;
   onChanged: () => Promise<void>;
+  canManage: boolean;
 }) {
   const [showForm, setShowForm] = useState(false),
     [title, setTitle] = useState(""),
@@ -346,12 +354,12 @@ function TasksModal({
         </div>
         <div className="tasks-toolbar">
           <strong>Tareas y entregables</strong>
-          <button
+          {canManage && <button
             className="text-button"
             onClick={() => setShowForm(!showForm)}
           >
             <Plus size={16} /> Nueva tarea
-          </button>
+          </button>}
         </div>
         {showForm && (
           <form className="prospect-form task-form" onSubmit={submit}>
@@ -485,13 +493,13 @@ function TasksModal({
                     </option>
                   ))}
                 </select>
-                <button
+                {canManage && <button
                   className="icon-button"
                   onClick={() => void removeTask(task)}
                   aria-label={`Eliminar ${task.title}`}
                 >
                   <Trash2 size={16} />
-                </button>
+                </button>}
               </article>
             ))
           ) : (

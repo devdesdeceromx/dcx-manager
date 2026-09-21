@@ -1,17 +1,24 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
-import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
-import { LoginPage } from '@/features/auth/LoginPage'
-import { DashboardPage } from '@/features/dashboard/DashboardPage'
-import { ClientsPage } from '@/features/clients/ClientsPage'
-import { ProjectsPage } from '@/features/projects/ProjectsPage'
-import { ProspectsPage } from '@/features/prospects/ProspectsPage'
-import { QuotesPage } from '@/features/quotes/QuotesPage'
-import { CalendarPage } from '@/features/calendar/CalendarPage'
-import { FinancesPage } from '@/features/finances/FinancesPage'
-import { SettingsPage } from '@/features/settings/SettingsPage'
-import { TeamPage } from '@/features/team/TeamPage'
-import { ActivityPage } from '@/features/activity/ActivityPage'
-import { AppLayout } from '@/shared/components/AppLayout'
+import { Navigate, Route, Routes } from "react-router-dom";
+import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
+import { LoginPage } from "@/features/auth/LoginPage";
+import { DashboardPage } from "@/features/dashboard/DashboardPage";
+import { ClientsPage } from "@/features/clients/ClientsPage";
+import { ProjectsPage } from "@/features/projects/ProjectsPage";
+import { ProspectsPage } from "@/features/prospects/ProspectsPage";
+import { QuotesPage } from "@/features/quotes/QuotesPage";
+import { CalendarPage } from "@/features/calendar/CalendarPage";
+import { FinancesPage } from "@/features/finances/FinancesPage";
+import { SettingsPage } from "@/features/settings/SettingsPage";
+import { TeamPage } from "@/features/team/TeamPage";
+import { ActivityPage } from "@/features/activity/ActivityPage";
+import { AppLayout } from "@/shared/components/AppLayout";
+import { AccessRoute } from "@/features/auth/AccessRoute";
+import {
+  adminRoles,
+  commercialRoles,
+  financeRoles,
+  projectRoles,
+} from "@/shared/lib/permissions";
 
 export function App() {
   return (
@@ -20,18 +27,81 @@ export function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/prospects" element={<ProspectsPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/clients" element={<ClientsPage />} />
-          <Route path="/quotes" element={<QuotesPage />} />
-          <Route path="/calendar" element={<CalendarPage />} />
-          <Route path="/finances" element={<FinancesPage />} />
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/team" element={<TeamPage />} />
-          <Route path="/activity" element={<ActivityPage />} />
+          <Route
+            path="/prospects"
+            element={
+              <AccessRoute roles={commercialRoles}>
+                <ProspectsPage />
+              </AccessRoute>
+            }
+          />
+          <Route
+            path="/projects"
+            element={
+              <AccessRoute roles={projectRoles}>
+                <ProjectsPage />
+              </AccessRoute>
+            }
+          />
+          <Route
+            path="/clients"
+            element={
+              <AccessRoute roles={commercialRoles}>
+                <ClientsPage />
+              </AccessRoute>
+            }
+          />
+          <Route
+            path="/quotes"
+            element={
+              <AccessRoute roles={commercialRoles}>
+                <QuotesPage />
+              </AccessRoute>
+            }
+          />
+          <Route
+            path="/calendar"
+            element={
+              <AccessRoute roles={projectRoles}>
+                <CalendarPage />
+              </AccessRoute>
+            }
+          />
+          <Route
+            path="/finances"
+            element={
+              <AccessRoute roles={financeRoles}>
+                <FinancesPage />
+              </AccessRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <AccessRoute roles={adminRoles}>
+                <SettingsPage />
+              </AccessRoute>
+            }
+          />
+          <Route
+            path="/team"
+            element={
+              <AccessRoute roles={adminRoles}>
+                <TeamPage />
+              </AccessRoute>
+            }
+          />
+          <Route
+            path="/activity"
+            element={
+              <AccessRoute roles={adminRoles}>
+                <ActivityPage />
+              </AccessRoute>
+            }
+          />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
-  )
+  );
 }

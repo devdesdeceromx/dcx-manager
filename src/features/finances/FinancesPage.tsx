@@ -10,6 +10,8 @@ import {
   X,
 } from "lucide-react";
 import { downloadFinanceReportPdf } from "@/shared/lib/pdf";
+import { useAuth } from "@/features/auth/AuthContext";
+import { canManageFinance } from "@/shared/lib/permissions";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   createExpense,
@@ -45,6 +47,8 @@ const paid = (project: FinanceProject) =>
     );
 
 export function FinancesPage() {
+  const { role } = useAuth();
+  const canEdit = canManageFinance(role);
   const [projects, setProjects] = useState<FinanceProject[]>([]),
     [loading, setLoading] = useState(true),
     [error, setError] = useState<string | null>(null),
@@ -119,12 +123,12 @@ export function FinancesPage() {
             >
               <Download size={17} /> Descargar reporte
             </button>
-            <button
+            {canEdit && <button
               className="new-button"
               onClick={() => setExpenseProject(projects[0])}
             >
               <Plus size={18} /> Nuevo gasto
-            </button>
+            </button>}
           </div>
         )}
       </header>
@@ -221,12 +225,12 @@ export function FinancesPage() {
                     <small>Utilidad</small>
                     <strong>{money.format(utility)}</strong>
                   </div>
-                  <button
+                  {canEdit && <button
                     className="period-button"
                     onClick={() => setExpenseProject(project)}
                   >
                     Ver gastos
-                  </button>
+                  </button>}
                 </article>
               );
             })}

@@ -5,6 +5,8 @@ import { listClients, type Client } from "@/features/clients/clientService";
 import { createQuote, listQuotes, updateQuoteStatus } from "./quoteService";
 import type { Quote, QuoteItemInput, QuoteStatus } from "./types";
 import { downloadQuotePdf } from "@/shared/lib/pdf";
+import { useAuth } from "@/features/auth/AuthContext";
+import { canManageCommercial } from "@/shared/lib/permissions";
 
 const statusLabels: Record<QuoteStatus, string> = {
   draft: "Borrador",
@@ -22,6 +24,8 @@ const emptyItem: QuoteItemInput = {
 };
 
 export function QuotesPage() {
+  const { role } = useAuth();
+  const canEdit = canManageCommercial(role);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
@@ -129,13 +133,13 @@ export function QuotesPage() {
           <h1>Cotizaciones</h1>
           <p>Prepara propuestas reutilizando los datos de tus clientes.</p>
         </div>
-        <button
+        {canEdit && <button
           className="new-button"
           onClick={() => setOpen(true)}
           disabled={!clients.length}
         >
           <Plus size={18} /> Nueva cotización
-        </button>
+        </button>}
       </header>
       <section className="panel prospects-panel">
         <div className="prospects-toolbar">
@@ -177,9 +181,9 @@ export function QuotesPage() {
             <p>
               Agrega conceptos y el sistema calculará automáticamente el total.
             </p>
-            <button className="new-button" onClick={() => setOpen(true)}>
+            {canEdit && <button className="new-button" onClick={() => setOpen(true)}>
               Nueva cotización
-            </button>
+            </button>}
           </div>
         ) : (
           <div className="prospect-list">
@@ -218,6 +222,7 @@ export function QuotesPage() {
                 </button>
                 <select
                   className="status"
+                  disabled={!canEdit}
                   value={quote.status}
                   onChange={(event) =>
                     void changeStatus(quote, event.target.value as QuoteStatus)

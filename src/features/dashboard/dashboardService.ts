@@ -11,6 +11,7 @@ export type DashboardActivity = {
 export type DashboardData = {
   newProspects: number
   activeClients: number
+  pendingQuotes: number
   totalProspects: number
   pipeline: Record<ProspectStatus, number>
   activity: DashboardActivity[]
@@ -23,14 +24,15 @@ export async function getDashboardData(): Promise<DashboardData> {
   monthStart.setDate(1)
   monthStart.setHours(0, 0, 0, 0)
 
-  const [newProspectsResult, activeClientsResult, prospectsResult, activityResult] = await Promise.all([
+  const [newProspectsResult, activeClientsResult, pendingQuotesResult, prospectsResult, activityResult] = await Promise.all([
     supabase.from('prospects').select('*', { count: 'exact', head: true }).gte('created_at', monthStart.toISOString()),
     supabase.from('clients').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    supabase.from('quotes').select('*', { count: 'exact', head: true }).in('status', ['draft', 'sent', 'viewed', 'negotiation']),
     supabase.from('prospects').select('status'),
     supabase.from('activity_logs').select('id, action, entity_type, created_at').order('created_at', { ascending: false }).limit(6).returns<DashboardActivity[]>(),
   ])
 
-  const error = newProspectsResult.error ?? activeClientsResult.error ?? prospectsResult.error ?? activityResult.error
+  const error = newProspectsResult.error ?? activeClientsResult.error ?? pendingQuotesResult.error ?? prospectsResult.error ?? activityResult.error
   if (error) throw error
 
   const pipeline = { ...emptyPipeline }
@@ -39,6 +41,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   return {
     newProspects: newProspectsResult.count ?? 0,
     activeClients: activeClientsResult.count ?? 0,
+    pendingQuotes: pendingQuotesResult.count ?? 0,
     totalProspects: prospectsResult.data?.length ?? 0,
     pipeline,
     activity: activityResult.data ?? [],

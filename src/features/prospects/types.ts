@@ -12,10 +12,13 @@ export type Prospect = {
   source: ProspectSource
   estimated_budget: number | null
   status: ProspectStatus
+  description: string | null
+  notes: string | null
+  converted_at: string | null
   created_at: string
 }
 
-export type NewProspect = {
+export type ProspectInput = {
   name: string
   business_name?: string
   phone?: string
@@ -24,4 +27,6 @@ export type NewProspect = {
   source: ProspectSource
   estimated_budget?: number
   description?: string
+  notes?: string
+  status?: ProspectStatus
 }

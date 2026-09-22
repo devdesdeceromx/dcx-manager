@@ -21,6 +21,7 @@ const FinancesPage = lazyPage(() => import("@/features/finances/FinancesPage"), 
 const SettingsPage = lazyPage(() => import("@/features/settings/SettingsPage"), "SettingsPage");
 const TeamPage = lazyPage(() => import("@/features/team/TeamPage"), "TeamPage");
 const ActivityPage = lazyPage(() => import("@/features/activity/ActivityPage"), "ActivityPage");
+const ProfilePage = lazyPage(() => import("@/features/profile/ProfilePage"), "ProfilePage");
 
 export function App() {
   return <Suspense fallback={<div className="route-loading">Cargando módulo…</div>}>
@@ -39,6 +40,7 @@ export function App() {
           <Route path="/settings" element={<AccessRoute roles={adminRoles}><SettingsPage /></AccessRoute>} />
           <Route path="/team" element={<AccessRoute roles={adminRoles}><TeamPage /></AccessRoute>} />
           <Route path="/activity" element={<AccessRoute roles={adminRoles}><ActivityPage /></AccessRoute>} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

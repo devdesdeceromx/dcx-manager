@@ -8,14 +8,16 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  KeyRound,
   Settings,
   ShieldCheck,
   UserRoundSearch,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
 import { Brand } from "./Brand";
 import { NotificationCenter } from "@/features/notifications/NotificationCenter";
@@ -33,6 +35,7 @@ const items = [
 
 export function Sidebar() {
   const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const { user, role, signOut } = useAuth();
   const email = user?.email ?? "Usuario";
   const displayName = user?.user_metadata?.full_name || email.split("@")[0];
@@ -112,13 +115,19 @@ export function Sidebar() {
             <span>Configuración</span>
           </NavLink></>}
         </nav>
-        <div className="sidebar-user">
-          <div className="avatar">{initials}</div>
-          <div>
-            <strong>{displayName}</strong>
-            <span>{email}</span>
-          </div>
-          <ChevronDown size={16} />
+        <div className="sidebar-account">
+          {accountOpen && <div className="account-menu">
+            <NavLink to="/profile" onClick={() => { setAccountOpen(false); setOpen(false) }}><UserRound size={16}/> Mi perfil</NavLink>
+            <Link to="/profile#security" onClick={() => { setAccountOpen(false); setOpen(false) }}><KeyRound size={16}/> Seguridad</Link>
+          </div>}
+          <button className="sidebar-user" type="button" onClick={() => setAccountOpen((value) => !value)} aria-expanded={accountOpen}>
+            <div className="avatar">{initials}</div>
+            <div>
+              <strong>{displayName}</strong>
+              <span>{email}</span>
+            </div>
+            <ChevronDown className={accountOpen ? "account-chevron-open" : ""} size={16} />
+          </button>
         </div>
         <button className="logout-button" onClick={() => void signOut()}>
           <LogOut size={17} /> Cerrar sesión

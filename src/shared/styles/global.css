@@ -403,6 +403,7 @@ a { color: inherit; text-decoration: none; }
   .calendar-layout { grid-template-columns: 1fr; }
   .calendar-aside { grid-template-columns: 1fr 1fr; }
   .finance-metrics { grid-template-columns: repeat(2,1fr); }
+  .profile-layout { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {

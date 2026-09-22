@@ -57,7 +57,7 @@ export function LoginPage() {
     <section className="login-intro" aria-label="Presentación de DCX Manager">
       <Brand inverted />
       <div className="intro-content"><span className="eyebrow">Centro de operaciones</span><h1>Todo el negocio,<br />en un solo lugar.</h1><p>Visibilidad clara para decidir mejor, priorizar el trabajo y mantener el crecimiento bajo control.</p></div>
-      <div className="intro-footer"><span className="status-pulse" aria-hidden="true" />Entorno local de desarrollo</div>
+      <div className="intro-footer"><span className="status-pulse" aria-hidden="true" />{import.meta.env.DEV ? "Entorno local de desarrollo" : "Entorno seguro de producción"}</div>
     </section>
     <section className="login-panel"><div className="login-card">
       <div className="mobile-brand"><Brand /></div>

@@ -1,113 +1,45 @@
-import {
-  ArrowRight, Blocks, Bot, Check, ChevronRight, Code2, Facebook,
-  Instagram, Menu, MessageCircle, Play, Rocket, Sparkles, Target,
-  X, Youtube, Zap,
-} from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Blocks, Bot, Check, ChevronRight, Code2, Facebook, Globe2, Instagram, Menu, MessageCircle, Play, Rocket, Sparkles, Target, X, Youtube, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
 import { socialLinks } from "./socials";
 
-const services = [
-  { icon: Code2, number: "01", title: "Sitios web", text: "Experiencias rápidas, claras y diseñadas para convertir visitas en oportunidades reales." },
-  { icon: Blocks, number: "02", title: "Sistemas a medida", text: "Herramientas que ordenan tu operación, eliminan tareas repetitivas y crecen contigo." },
-  { icon: Bot, number: "03", title: "Automatización", text: "Conectamos procesos y datos para que tu negocio avance incluso cuando tú no estás." },
-];
+type Language = "es" | "en";
+const copy = {
+  es: {
+    nav:["Servicios","Proceso","Nosotros"],talk:"Hablemos",menu:["Abrir menú","Cerrar menú"],eyebrow:"Tecnología para negocios de frontera",heroA:"Haz que te encuentren",heroB:"antes de cruzar.",heroText:"Creamos experiencias digitales bilingües para negocios de Nuevo Progreso que reciben clientes de México y Estados Unidos.",start:"Quiero empezar",discover:"Descubre cómo",proofs:["Español + English","Diseño que genera confianza","Atención cercana"],visualLabel:"Representación de una experiencia digital bilingüe",miniTop:"TU NEGOCIO, SIN FRONTERAS",miniTitle:["Confianza que comienza","antes de la visita."],miniButton:"Reservar una cita",performance:"Rendimiento",focus:"Enfoque",results:"Resultados",
+    servicesKicker:"CREADO PARA NEGOCIOS LOCALES",servicesTitle:["Convierte búsquedas en","nuevos clientes."],servicesIntro:"Ayudamos a dentistas, spas, salones, farmacias y comercios de la frontera a verse profesionales, responder dudas y facilitar la visita.",services:[["Presencia bilingüe","Un sitio claro en español e inglés para generar confianza antes de que el visitante llegue."],["Reservas y atención","Citas, formularios y mensajes organizados para que ninguna oportunidad se pierda."],["Operación más simple","Herramientas y automatizaciones que reducen tareas repetitivas dentro de tu negocio."]],serviceLink:"Cuéntame tu idea",
+    why:"POR QUÉ DEVDEsDECEROMX",whyTitle:["Tu cliente ya está buscando.","Hagamos que te elija."],whyText:"Un turista médico o visitante compara opciones desde Estados Unidos: servicios, ubicación, reseñas y facilidad de contacto. Tu presencia digital debe responder todo eso con claridad.",values:["Comunicación para ambos lados de la frontera.","Diseño que transmite confianza y calidad.","Tecnología sencilla para tu equipo."],statementTop:"LOCAL + BINACIONAL",statementTitle:["Tu negocio está aquí.","Tus clientes pueden estar en cualquier lugar."],statementText:"Construimos el puente digital entre ambos.",
+    processKicker:"NUESTRO PROCESO",processTitle:["De la idea al ","impacto."],processIntro:"Un proceso transparente para que siempre sepas qué estamos haciendo, por qué y qué sigue.",steps:[["Entendemos","Conocemos tu negocio, tus clientes y lo que hace especial tu servicio."],["Diseñamos","Creamos una experiencia bilingüe sencilla, útil y con personalidad."],["Construimos","Desarrollamos con tecnología moderna y atención a cada detalle."],["Impulsamos","Publicamos, medimos y mejoramos para generar resultados reales."]],
+    contactKicker:"TU PRÓXIMO CLIENTE YA ESTÁ BUSCANDO",contactTitle:["Hagamos que","te encuentre."],contactText:"Cuéntanos sobre tu negocio. La primera conversación es para entenderte, sin compromisos y sin tecnicismos.",contactButton:"Iniciar una conversación",contactStrong:"Tu proyecto puede empezar hoy.",email:"Escríbenos a devdesdeceromx@gmail.com",footerText:"Soluciones digitales bilingües para negocios que quieren crecer.",explore:"Explora",follow:"Síguenos",soon:"Muy pronto en redes",made:"Hecho con intención en la frontera 🇲🇽 🇺🇸",subject:"Quiero iniciar un proyecto"
+  },
+  en: {
+    nav:["Services","Process","About us"],talk:"Let's talk",menu:["Open menu","Close menu"],eyebrow:"Technology for border businesses",heroA:"Be found",heroB:"before they cross.",heroText:"We build bilingual digital experiences for Nuevo Progreso businesses serving customers from Mexico and the United States.",start:"Start a project",discover:"See how",proofs:["English + Español","Trust-building design","Local support"],visualLabel:"Representation of a bilingual digital experience",miniTop:"YOUR BUSINESS, WITHOUT BORDERS",miniTitle:["Trust that begins","before the visit."],miniButton:"Book an appointment",performance:"Performance",focus:"Focus",results:"Results",
+    servicesKicker:"BUILT FOR LOCAL BUSINESSES",servicesTitle:["Turn searches into","new customers."],servicesIntro:"We help dentists, spas, salons, pharmacies and border businesses look professional, answer questions and make every visit easier.",services:[["Bilingual presence","A clear Spanish and English website that builds trust before your visitor arrives."],["Booking and support","Appointments, forms and messages organized so no opportunity slips away."],["Simpler operations","Tools and automations that reduce repetitive work across your business."]],serviceLink:"Tell me your idea",
+    why:"WHY DEVDEsDECEROMX",whyTitle:["Your customer is already searching.","Let's help them choose you."],whyText:"Medical tourists and visitors compare options from the U.S.: services, location, reviews and how easy it is to reach you. Your digital presence should answer it all, clearly.",values:["Communication for both sides of the border.","Design that conveys trust and quality.","Simple technology for your team."],statementTop:"LOCAL + CROSS-BORDER",statementTitle:["Your business is here.","Your customers can be anywhere."],statementText:"We build the digital bridge between both.",
+    processKicker:"OUR PROCESS",processTitle:["From an idea to ","real impact."],processIntro:"A transparent process so you always know what we're doing, why it matters and what comes next.",steps:[["We listen","We learn about your business, customers and what makes your service different."],["We design","We create a simple, useful bilingual experience with personality."],["We build","We develop with modern technology and careful attention to every detail."],["We grow","We launch, measure and improve to generate real results."]],
+    contactKicker:"YOUR NEXT CUSTOMER IS ALREADY SEARCHING",contactTitle:["Let's make sure","they find you."],contactText:"Tell us about your business. Our first conversation is about understanding your needs—no pressure and no technical jargon.",contactButton:"Start a conversation",contactStrong:"Your project can start today.",email:"Email us at devdesdeceromx@gmail.com",footerText:"Bilingual digital solutions for businesses ready to grow.",explore:"Explore",follow:"Follow us",soon:"Coming soon on social media",made:"Built with purpose on the border 🇲🇽 🇺🇸",subject:"I want to start a project"
+  }
+} as const;
 
-const steps = [
-  ["01", "Entendemos", "Escuchamos tu idea, tus objetivos y el problema que realmente necesitas resolver."],
-  ["02", "Diseñamos", "Convertimos lo complejo en una experiencia sencilla, útil y con personalidad."],
-  ["03", "Construimos", "Desarrollamos con tecnología moderna, avances claros y atención al detalle."],
-  ["04", "Impulsamos", "Publicamos, medimos y seguimos mejorando para que tu inversión genere valor."],
-];
+const icons=[Code2,Blocks,Bot];
+const socialItems=[{key:"tiktok",label:"TikTok",icon:Play},{key:"facebook",label:"Facebook",icon:Facebook},{key:"instagram",label:"Instagram",icon:Instagram},{key:"youtube",label:"YouTube",icon:Youtube}] as const;
+function Logo({language}:{language:Language}){return <a className="logo" href="#inicio" aria-label={`DevDesdeCeroMx, ${language==="es"?"inicio":"home"}`}><span className="logo-mark"><Blocks size={21}/></span><span><strong>DevDesdeCero</strong><b>Mx</b></span></a>}
 
-const socialItems = [
-  { key: "tiktok", label: "TikTok", icon: Play },
-  { key: "facebook", label: "Facebook", icon: Facebook },
-  { key: "instagram", label: "Instagram", icon: Instagram },
-  { key: "youtube", label: "YouTube", icon: Youtube },
-] as const;
-
-function Logo() {
-  return <a className="logo" href="#inicio" aria-label="DevDesdeCeroMx, inicio">
-    <span className="logo-mark"><Blocks size={21}/></span>
-    <span><strong>DevDesdeCero</strong><b>Mx</b></span>
-  </a>;
-}
-
-export function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const activeSocials = socialItems.filter(({ key }) => socialLinks[key]);
-
+export function App(){
+  const [menuOpen,setMenuOpen]=useState(false);
+  const [language,setLanguage]=useState<Language>(()=>localStorage.getItem("dcx-language")==="en"?"en":"es");
+  const t=copy[language];
+  const activeSocials=socialItems.filter(({key})=>socialLinks[key]);
+  useEffect(()=>{localStorage.setItem("dcx-language",language);document.documentElement.lang=language;document.title=language==="es"?"DevDesdeCeroMx · Tu negocio sin fronteras":"DevDesdeCeroMx · Business without borders"},[language]);
   return <div className="site-shell">
-    <header className="site-header">
-      <Logo />
-      <nav className={menuOpen ? "nav-open" : ""} aria-label="Navegación principal">
-        <a href="#servicios" onClick={() => setMenuOpen(false)}>Servicios</a>
-        <a href="#proceso" onClick={() => setMenuOpen(false)}>Proceso</a>
-        <a href="#nosotros" onClick={() => setMenuOpen(false)}>Nosotros</a>
-        <a href="#contacto" className="nav-cta" onClick={() => setMenuOpen(false)}>Hablemos <ArrowRight size={15}/></a>
-      </nav>
-      <button className="menu-button" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}>{menuOpen ? <X/> : <Menu/>}</button>
-    </header>
-
+    <header className="site-header"><Logo language={language}/><nav className={menuOpen?"nav-open":""} aria-label={language==="es"?"Navegación principal":"Main navigation"}><a href="#servicios" onClick={()=>setMenuOpen(false)}>{t.nav[0]}</a><a href="#proceso" onClick={()=>setMenuOpen(false)}>{t.nav[1]}</a><a href="#nosotros" onClick={()=>setMenuOpen(false)}>{t.nav[2]}</a><button className="language-switch" onClick={()=>setLanguage(language==="es"?"en":"es")} aria-label={language==="es"?"View in English":"Ver en español"}><Globe2 size={15}/><b>{language.toUpperCase()}</b><span>/</span>{language==="es"?"EN":"ES"}</button><a href="#contacto" className="nav-cta" onClick={()=>setMenuOpen(false)}>{t.talk}<ArrowRight size={15}/></a></nav><button className="menu-button" onClick={()=>setMenuOpen(!menuOpen)} aria-label={menuOpen?t.menu[1]:t.menu[0]}>{menuOpen?<X/>:<Menu/>}</button></header>
     <main>
-      <section className="hero" id="inicio">
-        <div className="hero-glow"/>
-        <div className="hero-copy">
-          <span className="eyebrow"><i/> Desarrollo digital con propósito</span>
-          <h1>Tu idea merece<br/>algo que <em>funcione.</em></h1>
-          <p>Diseñamos sitios web y soluciones digitales que convierten procesos complicados en experiencias simples, útiles y listas para crecer.</p>
-          <div className="hero-actions">
-            <a className="button primary" href="#contacto">Quiero empezar <ArrowRight size={18}/></a>
-            <a className="button ghost" href="#servicios"><Play size={15} fill="currentColor"/> Descubre cómo</a>
-          </div>
-          <div className="hero-proof"><span><Check size={14}/> Atención cercana</span><span><Check size={14}/> Soluciones a medida</span><span><Check size={14}/> Sin vueltas técnicas</span></div>
-        </div>
-        <div className="hero-visual" aria-label="Representación de una experiencia digital">
-          <div className="orbit orbit-one"/><div className="orbit orbit-two"/>
-          <div className="code-card">
-            <div className="window-bar"><span/><span/><span/><small>devdesdeceromx.dev</small></div>
-            <div className="code-body">
-              <div className="mini-sidebar"><b>DCX</b><i/><i/><i/></div>
-              <div className="mini-content"><span>CONSTRUYENDO ALGO INCREÍBLE</span><strong>Ideas que se vuelven<br/>realidad digital.</strong><div className="mini-button">Comenzar proyecto</div><div className="mini-grid"><i/><i/><i/></div></div>
-            </div>
-          </div>
-          <div className="float-card float-top"><span><Zap size={16}/></span><div><small>Rendimiento</small><strong>98/100</strong></div></div>
-          <div className="float-card float-bottom"><span><Target size={16}/></span><div><small>Enfoque</small><strong>Resultados</strong></div></div>
-        </div>
-        <div className="scroll-cue">SCROLL <i/></div>
-      </section>
-
-      <section className="section services" id="servicios">
-        <div className="section-heading"><div><span className="kicker">LO QUE HACEMOS</span><h2>Tecnología que trabaja<br/><em>a tu favor.</em></h2></div><p>No vendemos paquetes genéricos. Construimos exactamente lo que tu proyecto necesita para dar el siguiente paso.</p></div>
-        <div className="service-grid">{services.map(({ icon: Icon, number, title, text }) => <article className="service-card" key={title}><div className="service-top"><span><Icon/></span><small>{number}</small></div><h3>{title}</h3><p>{text}</p><a href="#contacto">Cuéntame tu idea <ChevronRight size={15}/></a></article>)}</div>
-      </section>
-
-      <section className="dark-section" id="nosotros">
-        <div className="manifesto">
-          <span className="kicker light">POR QUÉ DEVDEsDECEROMX</span>
-          <h2>No necesitas saber de código.<br/><em>Necesitas un aliado que sí.</em></h2>
-          <p>La tecnología no debería sentirse complicada ni lejana. Te acompañamos desde la primera idea hasta el lanzamiento, hablando claro y tomando cada decisión contigo.</p>
-          <div className="values"><div><strong>01.</strong><span>Claridad antes que tecnicismos.</span></div><div><strong>02.</strong><span>Diseño con intención, no decoración.</span></div><div><strong>03.</strong><span>Soluciones pensadas para durar.</span></div></div>
-        </div>
-        <div className="statement-card"><Sparkles/><span>DESDE CERO</span><strong>no significa<br/>empezar solo.</strong><p>Significa construir sobre una base correcta.</p></div>
-      </section>
-
-      <section className="section process" id="proceso">
-        <div className="section-heading"><div><span className="kicker">NUESTRO PROCESO</span><h2>De la idea al <em>impacto.</em></h2></div><p>Un proceso transparente para que siempre sepas qué estamos haciendo, por qué y qué sigue.</p></div>
-        <div className="process-list">{steps.map(([number, title, text]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{text}</p><ArrowRight/></article>)}</div>
-      </section>
-
-      <section className="contact" id="contacto">
-        <div className="contact-orb"/><div className="contact-copy"><span className="kicker light">HAGAMOS ALGO GRANDE</span><h2>¿Tienes una idea?<br/><em>Vamos a construirla.</em></h2><p>Cuéntanos qué tienes en mente. La primera conversación es para entenderte, sin compromisos y sin tecnicismos.</p><a className="button white" href="mailto:devdesdeceromx@gmail.com?subject=Quiero%20iniciar%20un%20proyecto">Iniciar una conversación <MessageCircle size={18}/></a></div>
-        <div className="contact-note"><Rocket/><div><strong>Tu proyecto puede empezar hoy.</strong><span>Escríbenos a devdesdeceromx@gmail.com</span></div></div>
-      </section>
+      <section className="hero" id="inicio"><div className="hero-glow"/><div className="hero-copy"><span className="eyebrow"><i/>{t.eyebrow}</span><h1>{t.heroA}<br/><em>{t.heroB}</em></h1><p>{t.heroText}</p><div className="hero-actions"><a className="button primary" href="#contacto">{t.start}<ArrowRight size={18}/></a><a className="button ghost" href="#servicios"><Play size={15} fill="currentColor"/>{t.discover}</a></div><div className="hero-proof">{t.proofs.map(item=><span key={item}><Check size={14}/>{item}</span>)}</div></div>
+        <div className="hero-visual" aria-label={t.visualLabel}><div className="orbit orbit-one"/><div className="orbit orbit-two"/><div className="code-card"><div className="window-bar"><span/><span/><span/><small>devdesdeceromx.dev</small></div><div className="code-body"><div className="mini-sidebar"><b>DCX</b><i/><i/><i/></div><div className="mini-content"><span>{t.miniTop}</span><strong>{t.miniTitle[0]}<br/>{t.miniTitle[1]}</strong><div className="mini-button">{t.miniButton}</div><div className="mini-grid"><i/><i/><i/></div></div></div></div><div className="float-card float-top"><span><Zap size={16}/></span><div><small>{t.performance}</small><strong>98/100</strong></div></div><div className="float-card float-bottom"><span><Target size={16}/></span><div><small>{t.focus}</small><strong>{t.results}</strong></div></div></div><div className="scroll-cue">SCROLL <i/></div></section>
+      <section className="section services" id="servicios"><div className="section-heading"><div><span className="kicker">{t.servicesKicker}</span><h2>{t.servicesTitle[0]}<br/><em>{t.servicesTitle[1]}</em></h2></div><p>{t.servicesIntro}</p></div><div className="service-grid">{t.services.map(([title,text],index)=>{const Icon=icons[index];return <article className="service-card" key={title}><div className="service-top"><span><Icon/></span><small>0{index+1}</small></div><h3>{title}</h3><p>{text}</p><a href="#contacto">{t.serviceLink}<ChevronRight size={15}/></a></article>})}</div></section>
+      <section className="dark-section" id="nosotros"><div className="manifesto"><span className="kicker light">{t.why}</span><h2>{t.whyTitle[0]}<br/><em>{t.whyTitle[1]}</em></h2><p>{t.whyText}</p><div className="values">{t.values.map((item,index)=><div key={item}><strong>0{index+1}.</strong><span>{item}</span></div>)}</div></div><div className="statement-card"><Sparkles/><span>{t.statementTop}</span><strong>{t.statementTitle[0]}<br/>{t.statementTitle[1]}</strong><p>{t.statementText}</p></div></section>
+      <section className="section process" id="proceso"><div className="section-heading"><div><span className="kicker">{t.processKicker}</span><h2>{t.processTitle[0]}<em>{t.processTitle[1]}</em></h2></div><p>{t.processIntro}</p></div><div className="process-list">{t.steps.map(([title,text],index)=><article key={title}><span>0{index+1}</span><h3>{title}</h3><p>{text}</p><ArrowRight/></article>)}</div></section>
+      <section className="contact" id="contacto"><div className="contact-orb"/><div className="contact-copy"><span className="kicker light">{t.contactKicker}</span><h2>{t.contactTitle[0]}<br/><em>{t.contactTitle[1]}</em></h2><p>{t.contactText}</p><a className="button white" href={`mailto:devdesdeceromx@gmail.com?subject=${encodeURIComponent(t.subject)}`}>{t.contactButton}<MessageCircle size={18}/></a></div><div className="contact-note"><Rocket/><div><strong>{t.contactStrong}</strong><span>{t.email}</span></div></div></section>
     </main>
-
-    <footer>
-      <div><Logo/><p>Soluciones digitales claras para ideas que quieren crecer.</p></div>
-      <div className="footer-links"><strong>Explora</strong><a href="#servicios">Servicios</a><a href="#proceso">Proceso</a><a href="#nosotros">Nosotros</a></div>
-      <div className="footer-social"><strong>Síguenos</strong>{activeSocials.length ? <div>{activeSocials.map(({ key, label, icon: Icon }) => <a href={socialLinks[key]} key={key} target="_blank" rel="noreferrer" aria-label={label}><Icon size={18}/></a>)}</div> : <span>Muy pronto en redes</span>}</div>
-      <div className="footer-bottom"><span>© {new Date().getFullYear()} DevDesdeCeroMx</span><span>Hecho con intención en México 🇲🇽</span></div>
-    </footer>
-  </div>;
+    <footer><div><Logo language={language}/><p>{t.footerText}</p></div><div className="footer-links"><strong>{t.explore}</strong><a href="#servicios">{t.nav[0]}</a><a href="#proceso">{t.nav[1]}</a><a href="#nosotros">{t.nav[2]}</a></div><div className="footer-social"><strong>{t.follow}</strong>{activeSocials.length?<div>{activeSocials.map(({key,label,icon:Icon})=><a href={socialLinks[key]} key={key} target="_blank" rel="noreferrer" aria-label={label}><Icon size={18}/></a>)}</div>:<span>{t.soon}</span>}</div><div className="footer-bottom"><span>© {new Date().getFullYear()} DevDesdeCeroMx</span><span>{t.made}</span></div></footer>
+  </div>
 }

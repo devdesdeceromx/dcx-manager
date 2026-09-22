@@ -5,7 +5,7 @@ import { LoginPage } from "@/features/auth/LoginPage";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import { UpdatePasswordPage } from "@/features/auth/UpdatePasswordPage";
 import { AppLayout } from "@/shared/components/AppLayout";
-import { adminRoles, commercialRoles, financeRoles, projectRoles } from "@/shared/lib/permissions";
+import { adminRoles, commercialRoles, financeRoles, projectRoles, workRoles } from "@/shared/lib/permissions";
 
 function lazyPage<T extends Record<string, ComponentType>>(loader: () => Promise<T>, name: keyof T) {
   return lazy(async () => ({ default: (await loader())[name] }));
@@ -24,6 +24,7 @@ const ActivityPage = lazyPage(() => import("@/features/activity/ActivityPage"), 
 const ProfilePage = lazyPage(() => import("@/features/profile/ProfilePage"), "ProfilePage");
 const WebsitePage = lazyPage(() => import("@/features/website/WebsitePage"), "WebsitePage");
 const AnalyticsPage = lazyPage(() => import("@/features/analytics/AnalyticsPage"), "AnalyticsPage");
+const WorkspacePage = lazyPage(() => import("@/features/workspace/WorkspacePage"), "WorkspacePage");
 
 export function App() {
   return <Suspense fallback={<div className="route-loading">Cargando módulo…</div>}>
@@ -44,6 +45,7 @@ export function App() {
           <Route path="/activity" element={<AccessRoute roles={adminRoles}><ActivityPage /></AccessRoute>} />
           <Route path="/website" element={<AccessRoute roles={adminRoles}><WebsitePage /></AccessRoute>} />
           <Route path="/analytics" element={<AccessRoute roles={adminRoles}><AnalyticsPage /></AccessRoute>} />
+          <Route path="/workspace" element={<AccessRoute roles={workRoles}><WorkspacePage /></AccessRoute>} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>

@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronDown,
   CircleDollarSign,
+  Clock3,
   FileText,
   Globe2,
   LayoutDashboard,
@@ -22,10 +23,11 @@ import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/features/auth/AuthContext";
 import { Brand } from "./Brand";
 import { NotificationCenter } from "@/features/notifications/NotificationCenter";
-import { adminRoles, allRoles, commercialRoles, financeRoles, projectRoles, type AppRole } from "@/shared/lib/permissions";
+import { adminRoles, allRoles, commercialRoles, financeRoles, projectRoles, workRoles, type AppRole } from "@/shared/lib/permissions";
 
 const items = [
   { label: "Resumen", icon: LayoutDashboard, to: "/dashboard", roles: allRoles },
+  { label: "Mi escritorio", icon: Clock3, to: "/workspace", roles: workRoles },
   { label: "Prospectos", icon: UserRoundSearch, to: "/prospects", roles: commercialRoles },
   { label: "Proyectos", icon: BarChart3, to: "/projects", roles: projectRoles },
   { label: "Calendario", icon: CalendarDays, to: "/calendar", roles: projectRoles },

@@ -1,4 +1,4 @@
-# DCX Manager
+# DevDesdeCeroMx Manager
 
 Base administrativa para DevDesdeCeroMX, construida con React, Vite y TypeScript.
 

@@ -23,8 +23,11 @@ a { color: inherit; text-decoration: none; }
 
 .brand { display: flex; align-items: center; gap: 10px; font-family: Manrope, sans-serif; font-size: 1.08rem; color: var(--ink); }
 .brand strong { font-weight: 700; }
+.brand-name { display: flex; min-width: 0; flex-direction: column; line-height: 1.05; }
+.brand-name small { margin-top: 3px; color: #8c91a2; font-family: Inter, sans-serif; font-size: .64rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
 .brand-mark { width: 36px; height: 36px; display: grid; place-items: center; background: var(--purple); color: white; border-radius: 11px; }
 .brand-inverted { color: #fff; }
+.brand-inverted .brand-name small { color: #71788e; }
 .brand-inverted .brand-mark { background: rgba(255,255,255,.12); }
 
 .login-page { min-height: 100vh; display: grid; grid-template-columns: minmax(380px, 47%) 1fr; }

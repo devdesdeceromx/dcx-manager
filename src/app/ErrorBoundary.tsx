@@ -12,7 +12,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo) {
-    console.error("DCX Manager encontró un error inesperado", error, info);
+    console.error("DevDesdeCeroMx Manager encontró un error inesperado", error, info);
   }
 
   render() {

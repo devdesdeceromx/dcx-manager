@@ -54,7 +54,7 @@ export function LoginPage() {
   }
 
   return <main className="login-page">
-    <section className="login-intro" aria-label="Presentación de DCX Manager">
+    <section className="login-intro" aria-label="Presentación de DevDesdeCeroMx Manager">
       <Brand inverted />
       <div className="intro-content"><span className="eyebrow">Centro de operaciones</span><h1>Todo el negocio,<br />en un solo lugar.</h1><p>Visibilidad clara para decidir mejor, priorizar el trabajo y mantener el crecimiento bajo control.</p></div>
       <div className="intro-footer"><span className="status-pulse" aria-hidden="true" />{import.meta.env.DEV ? "Entorno local de desarrollo" : "Entorno seguro de producción"}</div>
@@ -62,7 +62,7 @@ export function LoginPage() {
     <section className="login-panel"><div className="login-card">
       <div className="mobile-brand"><Brand /></div>
       {mode === "login" ? <>
-        <div className="login-heading"><div className="icon-tile"><LockKeyhole size={21} /></div><h2>Bienvenido de vuelta</h2><p>Ingresa para acceder al panel de DCX.</p></div>
+        <div className="login-heading"><div className="icon-tile"><LockKeyhole size={21} /></div><h2>Bienvenido de vuelta</h2><p>Ingresa para acceder al panel de DevDesdeCeroMx.</p></div>
         <form onSubmit={handleLogin}>
           <label htmlFor="email">Correo electrónico</label>
           <input id="email" name="email" type="email" placeholder="tu@correo.com" autoComplete="email" required />

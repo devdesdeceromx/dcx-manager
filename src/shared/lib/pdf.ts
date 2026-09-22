@@ -61,7 +61,7 @@ function header(doc: JsPDF, title: string, subtitle: string, settings?: Business
   doc.text(settings?.business_name || "DevDesdeCeroMX", 16, 15);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text("DCX Manager", 16, 23);
+  doc.text("DevDesdeCeroMx Manager", 16, 23);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(13);
   doc.text(title, 194, 15, { align: "right" });
@@ -87,7 +87,7 @@ function footer(doc: JsPDF, settings?: BusinessSettings | null) {
     doc.setFontSize(7);
     doc.setTextColor(125);
     const contact = [settings?.email, settings?.phone, settings?.website].filter(Boolean).join(" · ");
-    doc.text(contact || "Documento generado desde DCX Manager", 16, 288);
+    doc.text(contact || "Documento generado desde DevDesdeCeroMx Manager", 16, 288);
     doc.text(`Página ${page} de ${pages}`, 194, 288, { align: "right" });
   }
 }

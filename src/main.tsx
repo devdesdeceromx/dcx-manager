@@ -8,7 +8,7 @@ import { supabaseConfigurationError } from '@/shared/lib/supabase'
 import '@/shared/styles/global.css'
 
 const application = supabaseConfigurationError ? (
-  <main className="system-message"><h1>Configuración pendiente</h1><p>DCX Manager necesita las variables públicas de Supabase para iniciar.</p><small>Revisa VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY.</small></main>
+  <main className="system-message"><h1>Configuración pendiente</h1><p>DevDesdeCeroMx Manager necesita las variables públicas de Supabase para iniciar.</p><small>Revisa VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY.</small></main>
 ) : (
   <ErrorBoundary>
     <BrowserRouter basename={import.meta.env.BASE_URL}>

@@ -108,7 +108,7 @@ export function TeamPage() {
   return (
     <>
       <header className="module-header module-header-row">
-        <div><span className="eyebrow dark">SISTEMA</span><h1>Equipo y permisos</h1><p>Controla quién puede acceder a DCX Manager y qué función desempeña.</p></div>
+        <div><span className="eyebrow dark">SISTEMA</span><h1>Equipo y permisos</h1><p>Controla quién puede acceder a DevDesdeCeroMx Manager y qué función desempeña.</p></div>
         <button className="new-button" onClick={() => setInviteOpen(true)}><Plus size={18}/> Invitar usuario</button>
       </header>
       <section className="team-summary">

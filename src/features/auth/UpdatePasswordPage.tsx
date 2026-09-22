@@ -51,15 +51,15 @@ export function UpdatePasswordPage() {
   }
 
   return <main className="login-page">
-    <section className="login-intro" aria-label="Presentación de DCX Manager">
+    <section className="login-intro" aria-label="Presentación de DevDesdeCeroMx Manager">
       <Brand inverted />
-      <div className="intro-content"><span className="eyebrow">Acceso protegido</span><h1>Tu cuenta,<br />bajo tu control.</h1><p>Define una contraseña personal para ingresar de forma segura a DCX Manager.</p></div>
+      <div className="intro-content"><span className="eyebrow">Acceso protegido</span><h1>Tu cuenta,<br />bajo tu control.</h1><p>Define una contraseña personal para ingresar de forma segura a DevDesdeCeroMx Manager.</p></div>
       <div className="intro-footer"><span className="status-pulse" aria-hidden="true" />Sesión cifrada por Supabase</div>
     </section>
     <section className="login-panel"><div className="login-card">
       <div className="mobile-brand"><Brand /></div>
       {!ready ? <div className="auth-loading-inline">Validando enlace…</div> : completed ? <div className="auth-result">
-        <div className="icon-tile success"><CheckCircle2 size={22} /></div><h2>Contraseña guardada</h2><p>Tu acceso está listo. Ya puedes continuar a DCX Manager.</p><button className="primary-button" onClick={() => navigate("/dashboard", { replace: true })}>Entrar al Dashboard <ArrowRight size={18} /></button>
+        <div className="icon-tile success"><CheckCircle2 size={22} /></div><h2>Contraseña guardada</h2><p>Tu acceso está listo. Ya puedes continuar a DevDesdeCeroMx Manager.</p><button className="primary-button" onClick={() => navigate("/dashboard", { replace: true })}>Entrar al Dashboard <ArrowRight size={18} /></button>
       </div> : !validSession ? <div className="auth-result">
         <div className="icon-tile warning"><TriangleAlert size={22} /></div><h2>Enlace no válido</h2><p>{error ?? "Este enlace venció, ya fue utilizado o no contiene una sesión válida."}</p><Link className="primary-button" to="/login">Solicitar otro enlace</Link>
       </div> : <>

@@ -9,6 +9,7 @@ import {
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/shared/lib/supabase";
 import type { AppRole } from "@/shared/lib/permissions";
+import { absoluteAppUrl } from "@/shared/lib/appUrl";
 
 type AuthContextValue = {
   isAuthenticated: boolean;
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       },
       requestPasswordReset: async (email: string) => {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/auth/update-password`,
+          redirectTo: absoluteAppUrl("/auth/update-password"),
         });
         return error?.message ?? null;
       },

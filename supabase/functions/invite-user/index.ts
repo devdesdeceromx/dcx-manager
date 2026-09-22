@@ -58,11 +58,18 @@ Deno.serve(async (request) => {
       const email = String(body.email ?? "").trim().toLowerCase();
       const fullName = String(body.fullName ?? "").trim();
       const role = String(body.role ?? "read_only") as AppRole;
-      const redirectTo = "http://127.0.0.1:5173/auth/update-password";
+      const redirectTo = String(body.redirectTo ?? "");
+      const allowedRedirects = [
+        "http://127.0.0.1:5173/auth/update-password",
+        "http://localhost:5173/auth/update-password",
+        "https://devdesdeceromx.github.io/dcx-manager/auth/update-password",
+      ];
       if (!email) throw new Error("El correo es obligatorio");
       if (!fullName) throw new Error("El nombre es obligatorio");
       if (!roles.includes(role))
         throw new Error("El rol seleccionado no es válido");
+      if (!allowedRedirects.includes(redirectTo))
+        throw new Error("La URL de regreso no está autorizada");
       const { data, error } = await adminClient.auth.admin.inviteUserByEmail(
         email,
         { redirectTo, data: { full_name: fullName, role } },

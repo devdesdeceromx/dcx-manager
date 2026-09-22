@@ -1,4 +1,5 @@
 import { supabase } from "@/shared/lib/supabase";
+import { absoluteAppUrl } from "@/shared/lib/appUrl";
 
 export type AppRole =
   | "administrator"
@@ -48,7 +49,13 @@ export async function inviteStaffMember(
   fullName: string,
   role: AppRole,
 ) {
-  return manageInvitation({ action: "invite", email, fullName, role });
+  return manageInvitation({
+    action: "invite",
+    email,
+    fullName,
+    role,
+    redirectTo: absoluteAppUrl("/auth/update-password"),
+  });
 }
 
 export async function resendStaffInvitation(userId: string) {

@@ -1,6 +1,9 @@
 node_modules
 .pnpm-store
 dist
+*.tsbuildinfo
+website/vite.config.js
+website/vite.config.d.ts
 .env
 .env.*
 !.env.example

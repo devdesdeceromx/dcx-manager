@@ -1,0 +1,7 @@
+import { isSupabaseConfigured, supabase } from './supabase'
+
+type EventType = 'page_view'|'lead'
+const visitorKey='dcx-visitor-id', sessionKey='dcx-session-id'
+function id(key:string,storage:Storage){let value=storage.getItem(key);if(!value){value=crypto.randomUUID();storage.setItem(key,value)}return value}
+function client(){const ua=navigator.userAgent;const device=/iPad|Tablet/i.test(ua)?'tablet':/Mobi|Android/i.test(ua)?'mobile':'desktop';const browser=/Edg/i.test(ua)?'Edge':/Chrome/i.test(ua)?'Chrome':/Safari/i.test(ua)?'Safari':/Firefox/i.test(ua)?'Firefox':'Otro';const os=/Windows/i.test(ua)?'Windows':/Android/i.test(ua)?'Android':/iPhone|iPad|Mac/i.test(ua)?(/iPhone|iPad/i.test(ua)?'iOS':'macOS'):/Linux/i.test(ua)?'Linux':'Otro';return{device,browser,os}}
+export async function trackWebsiteEvent(eventType:EventType){if(!isSupabaseConfigured)return;const query=new URLSearchParams(location.search),info=client();let referrer='';try{referrer=document.referrer?new URL(document.referrer).hostname:''}catch{referrer=''}await supabase.rpc('track_website_event',{p_event_type:eventType,p_visitor_id:id(visitorKey,localStorage),p_session_id:id(sessionKey,sessionStorage),p_page_path:location.pathname,p_referrer_host:referrer,p_utm_source:query.get('utm_source'),p_utm_medium:query.get('utm_medium'),p_utm_campaign:query.get('utm_campaign'),p_device_type:info.device,p_browser:info.browser,p_operating_system:info.os,p_language:navigator.language,p_timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,p_screen_width:window.screen.width})}

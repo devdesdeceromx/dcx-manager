@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { submitWebsiteLead } from "./leadService";
 import { socialLinks as staticSocialLinks } from "./socials";
 import { getPublicSiteSettings, type PublicSiteSettings } from "./siteSettings";
+import { trackWebsiteEvent } from "./analytics";
 
 type Language = "es" | "en";
 const copy = {
@@ -38,7 +39,8 @@ export function App(){
   const activeSocials=socialItems.filter(({key})=>socialLinks[key]);
   useEffect(()=>{localStorage.setItem("dcx-language",language);document.documentElement.lang=language;document.title=language==="es"?"DevDesdeCeroMx · Tu negocio sin fronteras":"DevDesdeCeroMx · Business without borders"},[language]);
   useEffect(()=>{void getPublicSiteSettings().then(({data})=>{if(data)setSiteSettings(data)})},[]);
-  async function sendLead(event:FormEvent<HTMLFormElement>){event.preventDefault();const formElement=event.currentTarget;const data=new FormData(formElement);if(!String(data.get("email")).trim()&&!String(data.get("phone")).trim()){setFormState("error");return}setFormState("sending");const {error}=await submitWebsiteLead({name:String(data.get("name")),businessName:String(data.get("business")),phone:String(data.get("phone")),email:String(data.get("email")),service:String(data.get("service")),message:String(data.get("message")),language,website:String(data.get("website"))});if(error){setFormState("error");return}formElement.reset();setFormState("success")}
+  useEffect(()=>{void trackWebsiteEvent('page_view')},[]);
+  async function sendLead(event:FormEvent<HTMLFormElement>){event.preventDefault();const formElement=event.currentTarget;const data=new FormData(formElement);if(!String(data.get("email")).trim()&&!String(data.get("phone")).trim()){setFormState("error");return}setFormState("sending");const {error}=await submitWebsiteLead({name:String(data.get("name")),businessName:String(data.get("business")),phone:String(data.get("phone")),email:String(data.get("email")),service:String(data.get("service")),message:String(data.get("message")),language,website:String(data.get("website"))});if(error){setFormState("error");return}void trackWebsiteEvent('lead');formElement.reset();setFormState("success")}
   return <div className="site-shell" data-services={siteSettings?.show_services??true} data-industries={siteSettings?.show_industries??true} data-about={siteSettings?.show_about??true} data-process={siteSettings?.show_process??true}>
     <header className="site-header"><Logo language={language}/><nav className={menuOpen?"nav-open":""} aria-label={language==="es"?"Navegación principal":"Main navigation"}><a href="#servicios" onClick={()=>setMenuOpen(false)}>{t.nav[0]}</a><a href="#proceso" onClick={()=>setMenuOpen(false)}>{t.nav[1]}</a><a href="#nosotros" onClick={()=>setMenuOpen(false)}>{t.nav[2]}</a><button className="language-switch" onClick={()=>setLanguage(language==="es"?"en":"es")} aria-label={language==="es"?"View in English":"Ver en español"}><Globe2 size={15}/><b>{language.toUpperCase()}</b><span>/</span>{language==="es"?"EN":"ES"}</button><a href="#contacto" className="nav-cta" onClick={()=>setMenuOpen(false)}>{t.talk}<ArrowRight size={15}/></a></nav><button className="menu-button" onClick={()=>setMenuOpen(!menuOpen)} aria-label={menuOpen?t.menu[1]:t.menu[0]}>{menuOpen?<X/>:<Menu/>}</button></header>
     <main>

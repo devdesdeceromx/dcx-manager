@@ -280,6 +280,23 @@ a { color: inherit; text-decoration: none; }
 .website-toggle i::after { content:""; display:block; width:16px; height:16px; border-radius:50%; background:white; box-shadow:0 1px 4px #0002; transition:.2s; }
 .website-toggle input:checked + i { background:var(--purple); }
 .website-toggle input:checked + i::after { transform:translateX(16px); }
+.analytics-periods { display:flex; gap:4px; padding:4px; border:1px solid var(--line); border-radius:11px; background:white; }
+.analytics-periods button { border:0; border-radius:8px; padding:9px 13px; color:var(--muted); background:transparent; font-weight:700; cursor:pointer; }
+.analytics-periods button.active { color:white; background:var(--purple); }
+.analytics-chart { margin:20px 0; min-height:300px; }
+.analytics-bars { height:220px; display:flex; align-items:flex-end; gap:8px; padding-top:28px; }
+.analytics-bars>div { flex:1; height:100%; min-width:12px; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:8px; }
+.analytics-bars span { width:min(28px,80%); min-height:4px; border-radius:6px 6px 2px 2px; background:linear-gradient(#8572ff,var(--purple)); }
+.analytics-bars small { color:var(--muted); font-size:.64rem; white-space:nowrap; }
+.analytics-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.analytics-breakdown { min-height:250px; }
+.breakdown-row { display:grid; grid-template-columns:130px 1fr; align-items:center; gap:12px; margin:15px 0; font-size:.76rem; }
+.breakdown-row>span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.breakdown-row>div { display:flex; align-items:center; gap:8px; height:8px; border-radius:999px; background:#eeeef4; }
+.breakdown-row i { display:block; height:100%; min-width:3px; border-radius:999px; background:var(--purple); }
+.breakdown-row small { min-width:24px; color:var(--muted); font-weight:700; }
+.analytics-empty { min-height:150px; display:grid; place-content:center; text-align:center; color:var(--muted); }
+.analytics-empty strong { color:var(--ink); }
 .settings-success { color: #23855c; background: #edf9f4; border-radius: 8px; padding: 10px 12px; font-size: .78rem; }
 .module-loading { padding: 28px; color: var(--muted); }
 .team-summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 16px; }
@@ -411,6 +428,7 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 1080px) {
   .website-settings { grid-template-columns: 1fr; }
+  .analytics-grid { grid-template-columns:1fr; }
   .metrics-grid { grid-template-columns: repeat(2, 1fr); }
   .dashboard-grid { grid-template-columns: 1fr; }
   .quick-actions { grid-template-columns: 1fr; }

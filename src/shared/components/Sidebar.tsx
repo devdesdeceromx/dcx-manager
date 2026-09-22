@@ -86,6 +86,13 @@ export function Sidebar() {
           <span className="nav-label nav-label-secondary">Sistema</span>
           <NotificationCenter />
           {role && adminRoles.includes(role) && <><NavLink
+            to="/analytics"
+            onClick={() => setOpen(false)}
+            className={({ isActive }) => `nav-item ${isActive ? "nav-item-active" : ""}`}
+          >
+            <BarChart3 size={19} />
+            <span>Analítica web</span>
+          </NavLink><NavLink
             to="/website"
             onClick={() => setOpen(false)}
             className={({ isActive }) =>

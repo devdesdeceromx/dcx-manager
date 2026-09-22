@@ -1,7 +1,8 @@
 import { ArrowRight, Blocks, Bot, Check, CheckCircle2, ChevronRight, Code2, Facebook, Globe2, HeartPulse, Instagram, LoaderCircle, Menu, Pill, Play, Rocket, Scissors, Send, Sparkles, Target, X, Youtube, Zap } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { submitWebsiteLead } from "./leadService";
-import { socialLinks } from "./socials";
+import { socialLinks as staticSocialLinks } from "./socials";
+import { getPublicSiteSettings, type PublicSiteSettings } from "./siteSettings";
 
 type Language = "es" | "en";
 const copy = {
@@ -30,11 +31,15 @@ export function App(){
   const [menuOpen,setMenuOpen]=useState(false);
   const [language,setLanguage]=useState<Language>(()=>localStorage.getItem("dcx-language")==="en"?"en":"es");
   const [formState,setFormState]=useState<"idle"|"sending"|"success"|"error">("idle");
-  const t=copy[language];
+  const [siteSettings,setSiteSettings]=useState<PublicSiteSettings|null>(null);
+  const baseCopy=copy[language];
+  const t={...baseCopy,eyebrow:siteSettings?.[`hero_eyebrow_${language}`]??baseCopy.eyebrow,heroA:siteSettings?.[`hero_title_${language}`]??baseCopy.heroA,heroB:siteSettings?.[`hero_highlight_${language}`]??baseCopy.heroB,heroText:siteSettings?.[`hero_description_${language}`]??baseCopy.heroText,email:siteSettings?.contact_email?`${language==="es"?"También puedes escribirnos a":"You can also email us at"} ${siteSettings.contact_email}`:baseCopy.email};
+  const socialLinks={tiktok:siteSettings?.tiktok_url??staticSocialLinks.tiktok,facebook:siteSettings?.facebook_url??staticSocialLinks.facebook,instagram:siteSettings?.instagram_url??staticSocialLinks.instagram,youtube:siteSettings?.youtube_url??staticSocialLinks.youtube};
   const activeSocials=socialItems.filter(({key})=>socialLinks[key]);
   useEffect(()=>{localStorage.setItem("dcx-language",language);document.documentElement.lang=language;document.title=language==="es"?"DevDesdeCeroMx · Tu negocio sin fronteras":"DevDesdeCeroMx · Business without borders"},[language]);
+  useEffect(()=>{void getPublicSiteSettings().then(({data})=>{if(data)setSiteSettings(data)})},[]);
   async function sendLead(event:FormEvent<HTMLFormElement>){event.preventDefault();const formElement=event.currentTarget;const data=new FormData(formElement);if(!String(data.get("email")).trim()&&!String(data.get("phone")).trim()){setFormState("error");return}setFormState("sending");const {error}=await submitWebsiteLead({name:String(data.get("name")),businessName:String(data.get("business")),phone:String(data.get("phone")),email:String(data.get("email")),service:String(data.get("service")),message:String(data.get("message")),language,website:String(data.get("website"))});if(error){setFormState("error");return}formElement.reset();setFormState("success")}
-  return <div className="site-shell">
+  return <div className="site-shell" data-services={siteSettings?.show_services??true} data-industries={siteSettings?.show_industries??true} data-about={siteSettings?.show_about??true} data-process={siteSettings?.show_process??true}>
     <header className="site-header"><Logo language={language}/><nav className={menuOpen?"nav-open":""} aria-label={language==="es"?"Navegación principal":"Main navigation"}><a href="#servicios" onClick={()=>setMenuOpen(false)}>{t.nav[0]}</a><a href="#proceso" onClick={()=>setMenuOpen(false)}>{t.nav[1]}</a><a href="#nosotros" onClick={()=>setMenuOpen(false)}>{t.nav[2]}</a><button className="language-switch" onClick={()=>setLanguage(language==="es"?"en":"es")} aria-label={language==="es"?"View in English":"Ver en español"}><Globe2 size={15}/><b>{language.toUpperCase()}</b><span>/</span>{language==="es"?"EN":"ES"}</button><a href="#contacto" className="nav-cta" onClick={()=>setMenuOpen(false)}>{t.talk}<ArrowRight size={15}/></a></nav><button className="menu-button" onClick={()=>setMenuOpen(!menuOpen)} aria-label={menuOpen?t.menu[1]:t.menu[0]}>{menuOpen?<X/>:<Menu/>}</button></header>
     <main>
       <section className="hero" id="inicio"><div className="hero-glow"/><div className="hero-copy"><span className="eyebrow"><i/>{t.eyebrow}</span><h1>{t.heroA}<br/><em>{t.heroB}</em></h1><p>{t.heroText}</p><div className="hero-actions"><a className="button primary" href="#contacto">{t.start}<ArrowRight size={18}/></a><a className="button ghost" href="#servicios"><Play size={15} fill="currentColor"/>{t.discover}</a></div><div className="hero-proof">{t.proofs.map(item=><span key={item}><Check size={14}/>{item}</span>)}</div></div>

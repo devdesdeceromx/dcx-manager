@@ -5,6 +5,7 @@ import {
   ChevronDown,
   CircleDollarSign,
   FileText,
+  Globe2,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -85,6 +86,15 @@ export function Sidebar() {
           <span className="nav-label nav-label-secondary">Sistema</span>
           <NotificationCenter />
           {role && adminRoles.includes(role) && <><NavLink
+            to="/website"
+            onClick={() => setOpen(false)}
+            className={({ isActive }) =>
+              `nav-item ${isActive ? "nav-item-active" : ""}`
+            }
+          >
+            <Globe2 size={19} />
+            <span>Sitio web</span>
+          </NavLink><NavLink
             to="/team"
             onClick={() => setOpen(false)}
             className={({ isActive }) =>

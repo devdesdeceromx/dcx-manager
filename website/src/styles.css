@@ -7,6 +7,7 @@ body { margin:0; min-width:320px; overflow-x:hidden; }
 button,a { font:inherit; }
 a { color:inherit; text-decoration:none; }
 .site-shell { min-height:100vh; }
+.site-shell[data-services="false"] .services,.site-shell[data-industries="false"] .industries,.site-shell[data-about="false"] .dark-section,.site-shell[data-process="false"] .process { display:none; }
 .site-header { position:absolute; z-index:20; top:0; left:50%; transform:translateX(-50%); width:min(1240px,calc(100% - 64px)); height:92px; display:flex; align-items:center; justify-content:space-between; }
 .logo { display:flex; align-items:center; gap:10px; color:white; font-family:Manrope,sans-serif; font-size:1.03rem; }
 .logo-mark { display:grid; place-items:center; width:36px; height:36px; border-radius:11px; color:white; background:var(--purple); box-shadow:0 8px 28px rgba(118,95,246,.32); }

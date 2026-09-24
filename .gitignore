@@ -1,6 +1,9 @@
 node_modules
 .pnpm-store
 dist
+desktop/dist
+desktop/dist-electron
+desktop/release
 *.tsbuildinfo
 website/vite.config.js
 website/vite.config.d.ts
@@ -11,3 +14,4 @@ website/vite.config.d.ts
 *.local
 *.log
 .sites-runtime
+.public-hotfix/

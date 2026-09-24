@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "desktop:dev": "pnpm --filter devdesdeceromx-timer dev",
+    "desktop:build": "pnpm --filter devdesdeceromx-timer build",
+    "desktop:dist": "pnpm --filter devdesdeceromx-timer dist:win"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",

@@ -1,0 +1,43 @@
+{
+  "name": "devdesdeceromx-timer",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Cronometro flotante de DevDesdeCeroMx Manager",
+  "author": "DevDesdeCeroMx",
+  "packageManager": "pnpm@11.19.0",
+  "main": "dist-electron/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "dist:win": "pnpm build && electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.89.0",
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "electron": "^38.7.2",
+    "electron-builder": "^26.0.12",
+    "electron-vite": "^4.0.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  },
+  "build": {
+    "appId": "mx.devdesdeceromx.timer",
+    "productName": "DevDesdeCeroMx Timer",
+    "directories": { "output": "release" },
+    "npmRebuild": false,
+    "files": ["dist-electron/**/*", "dist/**/*"],
+    "win": { "target": "nsis" },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
